@@ -272,12 +272,8 @@ namespace GLTFRevitExport.Export {
                             shouldSkip = true;
                             if (_docStack.Peek() is Document document)
                             {
-                                try
-                                {
-                                    Element e = document.GetElement(eid);
-                                    NonExportedElements.Add(e);
-                                }
-                                catch { }
+                                Element e = document.GetElement(eid);
+                                NonExportedElements.Add(e);
                             }
                             break;
                         }
