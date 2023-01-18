@@ -20,6 +20,8 @@ namespace GLTFRevitExport.Export {
 #else
     sealed partial class ExportContext : IExportContext, IExportContextBase, IModelExportContext {
 #endif
+        public List<Element> NonExportedElements { get; set; } = new List<Element>();
+
         #region Start, Stop, Cancel
         // Runs once at beginning of export. Sets up the root node
         // and scene.
@@ -261,8 +263,27 @@ namespace GLTFRevitExport.Export {
 
                     _actions.Enqueue(new ElementBoundsAction(bounds));
 
-                    foreach (var partData in _partStack)
-                        _actions.Enqueue(new PartFromDataAction(partData));
+                    // Preventing elements which have null lists of faces or vertices.
+                    bool shouldSkip = false;
+                    foreach (var pd in _partStack)
+                    {
+                        if (!pd.Primitive.Vertices.Any() || !pd.Primitive.Faces.Any())
+                        {
+                            shouldSkip = true;
+                            if (_docStack.Peek() is Document document)
+                            {
+                                Element e = document.GetElement(eid);
+                                NonExportedElements.Add(e);
+                            }
+                            break;
+                        }
+                    }
+
+                    if (!shouldSkip)
+                    {
+                        foreach (var partData in _partStack)
+                            _actions.Enqueue(new PartFromDataAction(partData));
+                    }
                 }
                 _partStack.Clear();
 

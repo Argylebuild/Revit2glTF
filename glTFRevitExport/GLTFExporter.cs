@@ -10,9 +10,12 @@ using GLTFRevitExport.Properties;
 namespace GLTFRevitExport {
     public class GLTFExporter {
         readonly ExportContext _ctx = null;
-
+        public static List<Element> NonExportedElements { get; set; } = new List<Element>();
         public GLTFExporter(Document doc, GLTFExportConfigs configs = null)
-            => _ctx = new ExportContext(doc, configs ?? new GLTFExportConfigs());
+        {
+            _ctx = new ExportContext(doc, configs ?? new GLTFExportConfigs());
+            NonExportedElements = _ctx.NonExportedElements;
+        }
 
         public void ExportView(View view, ElementFilter filter = null) {
 
