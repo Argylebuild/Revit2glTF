@@ -26,7 +26,7 @@ namespace GLTFRevitExport.Build.Actions {
             Level level = (Level)element;
 
             // make a matrix from level elevation
-            float elev = level.Elevation.ToGLTFLength();
+            float elev = level.ProjectElevation.ToGLTFLength();
             float[] elevMatrix = null;
             // no matrix is specified for a level at elev 0
             if (elev != 0f) {
