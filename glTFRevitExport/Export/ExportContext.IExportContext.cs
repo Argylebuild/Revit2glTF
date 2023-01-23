@@ -265,8 +265,8 @@ namespace GLTFRevitExport.Export {
 
                     // Preventing elements which have null lists of faces or vertices.
                     bool shouldSkip = false;
-                    foreach (var pd in _partStack)
-                    {
+                    foreach (var pd in _partStack.Where(x => x.Primitive != null))
+                    {                        
                         if (!pd.Primitive.Vertices.Any() || !pd.Primitive.Faces.Any())
                         {
                             shouldSkip = true;
