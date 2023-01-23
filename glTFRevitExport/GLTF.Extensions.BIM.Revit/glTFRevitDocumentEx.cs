@@ -68,7 +68,7 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
                     if (param != null) {
                         var paramValue = param.ToGLTF();
                         if (paramValue != null)
-                            docProps.Add(param.Definition.Name, paramValue);
+                            docProps.Add(GetValidName(param), paramValue);
                     }
                 }
 
@@ -76,10 +76,26 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
                     if (param.Id.IntegerValue > 0) {
                         var paramValue = param.ToGLTF();
                         if (paramValue != null)
-                            docProps.Add(param.Definition.Name, paramValue);
+                            docProps.Add(GetValidName(param), paramValue);
                     }
             }
             return docProps;
+
+
+            string GetValidName(Parameter param)
+			{
+                string paramName = param.Definition.Name;
+				if (docProps.ContainsKey(paramName))
+				{
+                    int i = 1;
+                    while (docProps.ContainsKey($"{paramName}{i}"))
+                        i++;
+                    paramName += i;
+				}
+
+                return paramName;
+			}
+
         }
     }
 }
