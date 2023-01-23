@@ -3,15 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30320.27
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "glTFRevitExport", "glTFRevitExport\glTFRevitExport.csproj", "{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GLTFRevitExport", "GLTFRevitExport\GLTFRevitExport.csproj", "{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{BEE22A5A-C690-4977-B6A2-340E5BBAA58E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GLTF2BIM", "lib\glTF2BIM\GLTF2BIM\GLTF2BIM.csproj", "{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
 		Debug2017|Any CPU = Debug2017|Any CPU
 		Debug2018|Any CPU = Debug2018|Any CPU
 		Debug2019|Any CPU = Debug2019|Any CPU
 		Debug2020|Any CPU = Debug2020|Any CPU
 		Debug2021|Any CPU = Debug2021|Any CPU
+		Release|Any CPU = Release|Any CPU
 		Release2017|Any CPU = Release2017|Any CPU
 		Release2018|Any CPU = Release2018|Any CPU
 		Release2019|Any CPU = Release2019|Any CPU
@@ -19,19 +25,50 @@ Global
 		Release2021|Any CPU = Release2021|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Debug|Any CPU.ActiveCfg = Release2021|x64
+		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Debug|Any CPU.Build.0 = Release2021|x64
 		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Debug2017|Any CPU.ActiveCfg = Debug2017|x64
 		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Debug2018|Any CPU.ActiveCfg = Debug2018|x64
 		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Debug2019|Any CPU.ActiveCfg = Debug2019|x64
 		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Debug2020|Any CPU.ActiveCfg = Debug2020|x64
 		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Debug2021|Any CPU.ActiveCfg = Debug2021|x64
+		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Release|Any CPU.ActiveCfg = Release2021|x64
+		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Release|Any CPU.Build.0 = Release2021|x64
 		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Release2017|Any CPU.ActiveCfg = Release2017|x64
 		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Release2018|Any CPU.ActiveCfg = Release2018|x64
 		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Release2019|Any CPU.ActiveCfg = Release2019|x64
 		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Release2020|Any CPU.ActiveCfg = Release2020|x64
 		{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}.Release2021|Any CPU.ActiveCfg = Release2021|x64
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Debug2017|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Debug2017|Any CPU.Build.0 = Debug|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Debug2018|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Debug2018|Any CPU.Build.0 = Debug|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Debug2019|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Debug2019|Any CPU.Build.0 = Debug|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Debug2020|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Debug2020|Any CPU.Build.0 = Debug|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Debug2021|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Debug2021|Any CPU.Build.0 = Debug|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Release2017|Any CPU.ActiveCfg = Release|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Release2017|Any CPU.Build.0 = Release|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Release2018|Any CPU.ActiveCfg = Release|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Release2018|Any CPU.Build.0 = Release|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Release2019|Any CPU.ActiveCfg = Release|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Release2019|Any CPU.Build.0 = Release|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Release2020|Any CPU.ActiveCfg = Release|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Release2020|Any CPU.Build.0 = Release|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Release2021|Any CPU.ActiveCfg = Release|Any CPU
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F}.Release2021|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E3AB8537-D49E-4E88-8CE5-3A3316F2E12F} = {BEE22A5A-C690-4977-B6A2-340E5BBAA58E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3549B740-9439-4093-BF66-9FCF49742047}

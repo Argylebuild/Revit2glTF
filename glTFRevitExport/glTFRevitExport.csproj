@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{4E089540-E5C0-45D9-BB33-3CBA0E4373B5}</ProjectGuid>
+    <ProjectGuid>{16D0AF26-B9A2-4C97-A821-41CBD93D9B73}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>glTFRevitExport</RootNamespace>
-    <AssemblyName>glTFRevitExport</AssemblyName>
+    <RootNamespace>GLTFRevitExport</RootNamespace>
+    <AssemblyName>Argyle.glTFRevitExport</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
@@ -33,6 +33,14 @@
   <PropertyGroup Condition="$(Configuration.Contains('2021'))">
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <RevitVersion>2021</RevitVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(Configuration.Contains('2022'))">
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <RevitVersion>2022</RevitVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(Configuration.Contains('2023'))">
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <RevitVersion>2023</RevitVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2017|x64'">
     <OutputPath>bin\Debug2017\</OutputPath>
@@ -84,6 +92,26 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2022|x64'">
+    <OutputPath>bin\Debug2022\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <DefineConstants>TRACE;DEBUG;REVIT2022</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2023|x64'">
+    <OutputPath>bin\Debug2023\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <DefineConstants>TRACE;DEBUG;REVIT2023</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release2017|x64'">
     <OutputPath>bin\Release2017\</OutputPath>
     <Optimize>true</Optimize>
@@ -124,12 +152,26 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release2022|x64'">
+    <OutputPath>bin\Release2022\</OutputPath>
+    <Optimize>true</Optimize>
+    <DefineConstants>REVIT2022</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release2023|x64'">
+    <OutputPath>bin\Release2023\</OutputPath>
+    <Optimize>true</Optimize>
+    <DefineConstants>REVIT2023</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -144,58 +186,69 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="WPF\MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Compile Include="App.cs" />
-    <Compile Include="Command.cs" />
-    <Compile Include="glTF.cs" />
-    <Compile Include="GlTFExportContext.cs" />
-    <Compile Include="Containers.cs" />
-    <Compile Include="GLTFManager.cs" />
-    <Compile Include="Util.cs" />
-    <Compile Include="WPF\MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-      <SubType>Code</SubType>
+    <Compile Include="Build\Actions\BaseTypes.cs" />
+    <Compile Include="Build\Actions\_ElementActions\ElementEndAction.cs" />
+    <Compile Include="Build\Actions\_ElementActions\ElementBeginAction.cs" />
+    <Compile Include="Build\Actions\_ElementActions\ElementBoundsAction.cs" />
+    <Compile Include="Build\Actions\_ElementActions\ElementTransformAction.cs" />
+    <Compile Include="Build\Actions\_LinkActions\LinkBeginAction.cs" />
+    <Compile Include="Build\Actions\_LinkActions\LinkBoundsAction.cs" />
+    <Compile Include="Build\Actions\_LinkActions\LinkEndAction.cs" />
+    <Compile Include="Build\Actions\_LinkActions\LinkTransformAction.cs" />
+    <Compile Include="Build\Actions\_PartActions\PartFromDataAction.cs" />
+    <Compile Include="Build\Actions\_PartActions\PartFromElementAction.cs" />
+    <Compile Include="Build\Actions\_SceneActions\SceneBeginAction.cs" />
+    <Compile Include="Build\Actions\_SceneActions\SceneEndAction.cs" />
+    <Compile Include="Build\Actions\GridAction.cs" />
+    <Compile Include="Build\Actions\LevelAction.cs" />
+    <Compile Include="Build\BuildContext.cs" />
+    <Compile Include="Build\Geometry\FacetData.cs" />
+    <Compile Include="Build\Geometry\PartData.cs" />
+    <Compile Include="Build\Geometry\PrimitiveData.cs" />
+    <Compile Include="Build\Geometry\VectorData.cs" />
+    <Compile Include="Export\ExportContext.Data.cs" />
+    <Compile Include="Export\ExportContext.IExportContext.cs" />
+    <Compile Include="Export\ExportContext.cs" />
+    <Compile Include="Export\ExportContext.Utils.cs" />
+    <Compile Include="GLTF.Extensions.BIM.Revit\Attributes.cs" />
+    <Compile Include="GLTF.Extensions.BIM.Revit\glTFRevitViewExt.cs" />
+    <Compile Include="Extensions\RevitAPIExtensions.cs" />
+    <Compile Include="Extensions\NumberExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="GLTF.Extensions.BIM.Revit\glTFRevitUtils.cs" />
+    <Compile Include="GLTFExportConfigs.cs" />
+    <Compile Include="GLTFExporter.cs" />
+    <Compile Include="GLTF.Extensions.BIM.Revit\glTFRevitDocumentEx.cs" />
+    <Compile Include="GLTF.Extensions.BIM.Revit\glTFRevitElementExt.cs" />
+    <Compile Include="Build\Logger.cs" />
+    <Compile Include="Properties\StringLib.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>StringLib.resx</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <EmbeddedResource Include="Properties\Resources.resx">
+    <EmbeddedResource Include="Properties\StringLib.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <LastGenOutput>StringLib.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="glTFRevitExport.addin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <EmbeddedResource Include="Embedded Media\small.png" />
-    <EmbeddedResource Include="Embedded Media\large.png" />
+    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="$(RevitVersion).0.0" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json">
-      <Version>12.0.3</Version>
-    </PackageReference>
-    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="$(RevitVersion).0.0" />
+    <ProjectReference Include="..\..\Argyle.Newtonsoft.Json\Src\Newtonsoft.Json\Newtonsoft.Json.csproj">
+      <Project>{0e806b3a-ae73-40c6-9501-c853d9b4f853}</Project>
+      <Name>Newtonsoft.Json</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\lib\glTF2BIM\GLTF2BIM\GLTF2BIM.csproj">
+      <Project>{a3838e64-eb23-4ffb-acec-0f1f0244fa53}</Project>
+      <Name>GLTF2BIM</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

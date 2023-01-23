@@ -1,0 +1,3 @@
+[submodule "lib/glTF2BIM"]
+	path = lib/glTF2BIM
+	url = https://github.com/Argylebuild/glTF2BIM.git
