@@ -1,5 +1,5 @@
 ﻿using System;
-
+using Vector3D = System.Numerics.Vector3;
 using Autodesk.Revit.DB;
 
 using GLTF2BIM.GLTF.Extensions.BIM.Schema;
@@ -136,6 +136,25 @@ namespace GLTFRevitExport.Extensions {
                 y: vector[1],
                 z: vector[2]
             );
+        }
+
+        public static bool CurveIntersects(this BoundingBoxXYZ bbox, Curve curve)
+        {
+            if (bbox == null || curve == null)
+            {
+                return false;
+            }
+
+            var startPoint = curve.Evaluate(0, true);
+            var endPoint = curve.Evaluate(1, true);
+
+            var b1 = new Vector3D((float)bbox.Min.X, (float)bbox.Min.Y, (float)bbox.Min.Z);
+            var b2 = new Vector3D((float)bbox.Max.X, (float)bbox.Max.Y, (float)bbox.Max.Z);
+            var l1 = new Vector3D((float)startPoint.X, (float)startPoint.Y, (float)startPoint.Z);
+            var l2 = new Vector3D((float)endPoint.X, (float)endPoint.Y, (float)endPoint.Z);
+            var hit = new Vector3D();
+
+            return GeometryUtils.BBoxCurveIntersection(b1, b2, l1, l2, ref hit);
         }
     }
 }
