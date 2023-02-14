@@ -5,6 +5,10 @@ namespace GLTFRevitExport
 {
     public class GeometryUtils
     {
+        private const int Axis1 = 1;
+        private const int Axis2 = 2;
+        private const int Axis3 = 3;
+
         public static bool BBoxCurveIntersection(Vector3D B1, Vector3D B2, Vector3D L1, Vector3D L2, ref Vector3D Hit)
         {
             if (L2.X < B1.X && L1.X < B1.X) return false;
@@ -41,9 +45,9 @@ namespace GLTFRevitExport
 
         private static bool InBox(Vector3D Hit, Vector3D B1, Vector3D B2, int Axis)
         {
-            if (Axis == 1 && Hit.Z > B1.Z && Hit.Z < B2.Z && Hit.Y > B1.Y && Hit.Y < B2.Y) return true;
-            if (Axis == 2 && Hit.Z > B1.Z && Hit.Z < B2.Z && Hit.X > B1.X && Hit.X < B2.X) return true;
-            if (Axis == 3 && Hit.X > B1.X && Hit.X < B2.X && Hit.Y > B1.Y && Hit.Y < B2.Y) return true;
+            if (Axis == Axis1 && Hit.Z > B1.Z && Hit.Z < B2.Z && Hit.Y > B1.Y && Hit.Y < B2.Y) return true;
+            if (Axis == Axis2 && Hit.Z > B1.Z && Hit.Z < B2.Z && Hit.X > B1.X && Hit.X < B2.X) return true;
+            if (Axis == Axis3 && Hit.X > B1.X && Hit.X < B2.X && Hit.Y > B1.Y && Hit.Y < B2.Y) return true;
             return false;
         }
     }

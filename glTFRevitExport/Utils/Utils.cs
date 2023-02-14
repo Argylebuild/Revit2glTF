@@ -7,6 +7,11 @@ namespace GLTFRevitExport
 {
     public class Utils
     {
+        public static Vector3D CreateVec3DByPoint(XYZ point)
+        {
+            return new Vector3D((float)point.X, (float)point.Y, (float)point.Z);
+        }
+
         /// <summary>
         /// Retrieve the unified Bounding Box that contains all the visible element's Bounding Boxes in the current view.
         /// </summary>

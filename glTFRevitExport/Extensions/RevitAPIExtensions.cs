@@ -148,10 +148,10 @@ namespace GLTFRevitExport.Extensions {
             var startPoint = curve.Evaluate(0, true);
             var endPoint = curve.Evaluate(1, true);
 
-            var b1 = new Vector3D((float)bbox.Min.X, (float)bbox.Min.Y, (float)bbox.Min.Z);
-            var b2 = new Vector3D((float)bbox.Max.X, (float)bbox.Max.Y, (float)bbox.Max.Z);
-            var l1 = new Vector3D((float)startPoint.X, (float)startPoint.Y, (float)startPoint.Z);
-            var l2 = new Vector3D((float)endPoint.X, (float)endPoint.Y, (float)endPoint.Z);
+            var b1 = Utils.CreateVec3DByPoint(bbox.Min);
+            var b2 = Utils.CreateVec3DByPoint(bbox.Max); 
+            var l1 = Utils.CreateVec3DByPoint(startPoint); 
+            var l2 = Utils.CreateVec3DByPoint(endPoint);
             var hit = new Vector3D();
 
             return GeometryUtils.BBoxCurveIntersection(b1, b2, l1, l2, ref hit);
