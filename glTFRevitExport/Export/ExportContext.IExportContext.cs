@@ -5,7 +5,6 @@ using System.Linq;
 
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
-
 using GLTF2BIM.GLTF.Schema;
 using GLTF2BIM.GLTF.Package;
 using GLTF2BIM.GLTF.Extensions.BIM.Schema;
@@ -13,6 +12,9 @@ using GLTFRevitExport.Extensions;
 using GLTFRevitExport.Build;
 using GLTFRevitExport.Build.Actions;
 using GLTFRevitExport.Build.Geometry;
+
+using Grid = Autodesk.Revit.DB.Grid;
+using Material = Autodesk.Revit.DB.Material;
 
 namespace GLTFRevitExport.Export {
 #if REVIT2019
@@ -105,20 +107,51 @@ namespace GLTFRevitExport.Export {
         void QueueGridActions(Document doc) {
             Logger.Log("> collecting grids");
 
-            // first collect the multisegment grids and record their children
-            // multi-segment grids are not supported and the segments will not
-            // be procesed as grids
-            var childGrids = new HashSet<ElementId>();
-            foreach (var e in new FilteredElementCollector(doc).OfClass(typeof(MultiSegmentGrid)).WhereElementIsNotElementType()) {
-                if (e is MultiSegmentGrid multiGrid) {
-                    childGrids.UnionWith(multiGrid.GetGridIds());
+            List<Grid> validGrids = new List<Grid>();
+
+            var visibleElements = Collector.GetVisibleElements(doc);
+
+            visibleElements = visibleElements.Where(e => !(e is Grid)).ToList();
+
+            var bbox = Utils.GetVisibleElementsBBox(doc, visibleElements);
+
+            foreach (var grid in Collector.GetAllGrids(doc))
+            {
+                var gridCurve = grid.Curve;
+
+                var intersect = bbox.CurveIntersects(gridCurve);               
+
+                if (intersect)
+                {
+                    validGrids.Add(grid);
                 }
             }
 
-            // then record the rest of the grids and omit the already recorded ones
-            foreach (var e in new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Grids).WhereElementIsNotElementType())
-                if (!childGrids.Contains(e.Id))
-                    _actions.Enqueue(new GridAction(element: e));
+            var childGrids = new HashSet<ElementId>();
+
+            using (var filter = new FilteredElementCollector(doc))
+            {
+                // first collect the multisegment grids and record their children
+                // multi-segment grids are not supported and the segments will not
+                // be procesed as grids
+                var grids = filter.OfClass(typeof(MultiSegmentGrid)).WhereElementIsNotElementType().ToList();
+
+                foreach (var e in grids)
+                {
+                    if (e is MultiSegmentGrid multiGrid)
+                        childGrids.UnionWith(multiGrid.GetGridIds());
+                }
+            }
+
+            using (var filter = new FilteredElementCollector(doc))
+            {
+                // then record the rest of the grids and omit the already recorded ones
+                foreach (var e in validGrids)
+                {
+                    if (!childGrids.Contains(e.Id))
+                        _actions.Enqueue(new GridAction(element: e));
+                }
+            }
         }
 
         void QueuePartFromElementActions(Document doc, View view, ElementFilter filter) {
