@@ -58,5 +58,7 @@ namespace GLTFRevitExport.Export {
 
 
         readonly Stack<PartData> _partStack = new Stack<PartData>();
+
+        readonly Stack<Transform> _transformStack = new Stack<Transform>();
     }
 }
