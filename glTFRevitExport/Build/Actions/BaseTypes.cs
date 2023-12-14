@@ -6,7 +6,7 @@ using System.Linq;
 
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Autodesk.Revit.DB.Visual;
+//using Autodesk.Revit.DB.Visual;
 using Autodesk.Revit.DB.Architecture;
 
 using GLTF2BIM.GLTF;
