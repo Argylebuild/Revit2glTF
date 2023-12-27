@@ -77,7 +77,7 @@ namespace GLTFRevitExport.Extensions {
 
         public static double ToGLTF(this Parameter p, double value) {
             // TODO: read value unit and convert correctly
-#if REVIT2022 || REVIT2023
+#if REVIT2021 || REVIT2022 || REVIT2023 || REVIT2024
             string typeId = p.Definition.GetDataType().TypeId;
             if (typeId.StartsWith("autodesk.spec.aec:length"))
                 return value.ToGLTFLength();
@@ -100,7 +100,7 @@ namespace GLTFRevitExport.Extensions {
                     return param.AsString();
 
                 case StorageType.Integer:
-#if REVIT2022 || REVIT2023
+#if REVIT2021 || REVIT2022 || REVIT2023 || REVIT2024
                     if (param.Definition.GetDataType().TypeId.StartsWith("autodesk.spec:spec.bool"))
 #else
                     if (param.Definition.ParameterType == ParameterType.YesNo)
