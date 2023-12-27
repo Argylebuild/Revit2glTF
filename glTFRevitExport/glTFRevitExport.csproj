@@ -13,9 +13,11 @@
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
     <TargetFrameworkProfile />
+    <LangVersion>11</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup Condition="$(Configuration.Contains('2017'))">
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <RevitVersion>2017</RevitVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(Configuration.Contains('2018'))">
@@ -35,7 +37,7 @@
     <RevitVersion>2021</RevitVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(Configuration.Contains('2022'))">
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <RevitVersion>2022</RevitVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(Configuration.Contains('2023'))">
@@ -169,6 +171,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="RevitAPI">
+      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2023.0.0\lib\net48\RevitAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2023.0.0\lib\net48\RevitAPIUI.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Numerics" />
@@ -243,7 +251,7 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="$(RevitVersion).0.0" />
+    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2023.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Argyle.Newtonsoft.Json\Src\Newtonsoft.Json\Newtonsoft.Json.csproj">
