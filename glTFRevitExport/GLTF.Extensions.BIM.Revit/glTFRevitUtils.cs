@@ -179,6 +179,7 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
 
                 // otherwise process the parameter value
                 // skip useless names
+                if(param.Definition == null) continue;
                 string paramName = param.Definition.Name;
                 // skip useless values
                 var paramValue = param.ToGLTF();
