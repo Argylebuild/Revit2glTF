@@ -29,40 +29,44 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
                 .Select(x => (BuiltInParameter)Enum.Parse(typeof(BuiltInParameter), x))
                 .ToArray();
 
-        public static Dictionary<string, object> GetProperties(glTFBIMExtension target, Element element) {
-            // exclude list for parameters that are processed by this
-            // constructor and should not be included in 'this.Properties'
-            var excludeParams = new List<BuiltInParameter>(excludeBuiltinParams);
+		public static Dictionary<string, object> GetProperties(glTFBIMExtension target, Element element)
+		{
+			var excludeParams = new List<BuiltInParameter>(excludeBuiltinParams);
 
-            bool isType = element is ElementType;
+			bool isType = element is ElementType;
 
-            // set the properties on this object from their associated builtin params
-            foreach (var propInfo in target.GetType().GetProperties()) {
-                var apiParamInfo =
-                    propInfo.GetCustomAttributes(typeof(RevitBuiltinParametersAttribute), false)
-                            .Cast<RevitBuiltinParametersAttribute>()
-                            .FirstOrDefault();
-                if (apiParamInfo != null) {
-                    object paramValue =
-                        isType ?
-                        GetParamValue(element, apiParamInfo.TypeParam) :
-                        GetParamValue(element, apiParamInfo.InstanceParam);
+			foreach (var propInfo in target.GetType().GetProperties())
+			{
+				try
+				{
+					var apiParamInfoAttributes = propInfo.GetCustomAttributes(typeof(RevitBuiltinParametersAttribute), false)
+														  .Cast<RevitBuiltinParametersAttribute>();
 
-                    // if there is compatible value, set the prop on this
-                    if (paramValue != null
-                            && propInfo.PropertyType.IsAssignableFrom(paramValue.GetType()))
-                        propInfo.SetValue(target, paramValue);
+					if (apiParamInfoAttributes.Any())
+					{
+						var apiParamInfo = apiParamInfoAttributes.FirstOrDefault();
+						object paramValue = isType ? GetParamValue(element, apiParamInfo.TypeParam) : GetParamValue(element, apiParamInfo.InstanceParam);
 
-                    // add the processed params to exclude
-                    excludeParams.Add(apiParamInfo.TypeParam);
-                    excludeParams.Add(apiParamInfo.InstanceParam);
-                }
-            }
+						if (paramValue != null && propInfo.PropertyType.IsAssignableFrom(paramValue.GetType()))
+						{
+							propInfo.SetValue(target, paramValue);
+						}
 
-            return GetParamValues(element, exclude: excludeParams);
-        }
+						excludeParams.Add(apiParamInfo.TypeParam);
+						excludeParams.Add(apiParamInfo.InstanceParam);
+					}
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"Error setting property {propInfo.Name} on {target.GetType().Name} for element {element.Id.IntegerValue}: {ex.Message}");
+				}
+			}
 
-        public static List<string> GetTaxonomies(Element e) {
+			return GetParamValues(element, exclude: excludeParams);
+		}
+
+
+		public static List<string> GetTaxonomies(Element e) {
             var taxonomies = new List<string>();
             // types show the hierarchical structure of data (vertical)
             if (e is ElementType et) {

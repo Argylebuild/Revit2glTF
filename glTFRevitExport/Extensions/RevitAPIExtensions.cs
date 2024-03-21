@@ -93,27 +93,35 @@ namespace GLTFRevitExport.Extensions {
         }
 
         public static object ToGLTF(this Parameter param) {
-            switch (param.StorageType) {
-                case StorageType.None: break;
+            try
+            {
+				switch (param.StorageType)
+				{
+					case StorageType.None: break;
 
-                case StorageType.String:
-                    return param.AsString();
+					case StorageType.String:
+						return param.AsString();
 
-                case StorageType.Integer:
-#if REVIT2021 || REVIT2022 || REVIT2023 || REVIT2024
+					case StorageType.Integer:
+#if REVIT2022 || REVIT2023 || REVIT2024
                     if (param.Definition.GetDataType().TypeId.StartsWith("autodesk.spec:spec.bool"))
 #else
-                    if (param.Definition.ParameterType == ParameterType.YesNo)
+						if (param.Definition.ParameterType == ParameterType.YesNo)
 #endif
-                        return param.AsInteger() != 0;
-                    else
-                        return param.AsInteger();
+							return param.AsInteger() != 0;
+						else
+							return param.AsInteger();
 
-                case StorageType.Double:
-                    return param.ToGLTF(param.AsDouble());
+					case StorageType.Double:
+						return param.ToGLTF(param.AsDouble());
 
-                case StorageType.ElementId:
-                    return param.AsElementId().IntegerValue;
+					case StorageType.ElementId:
+						return param.AsElementId().IntegerValue;
+				}
+			}
+            catch (Exception)
+            {
+                Console.WriteLine($"Error converting parameter {param.Definition.Name} to glTF");
             }
             return null;
         }
