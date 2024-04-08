@@ -31,8 +31,15 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
                     // record properties
                     ctx.PropertyContainer.Record(Id, glTFRevitUtils.GetProperties(this, e));
                 else
-                    // embed properties
-                    Properties = glTFRevitUtils.GetProperties(this, e);
+                {
+
+
+					// embed properties
+					Dictionary<string,Tuple<string,object>> tempProperties = glTFRevitUtils.GetProperties(this, e);
+
+                    foreach (var prop in tempProperties)
+						Properties.Add(prop.Key, prop.Value.Item2);
+				}
             }
         }
 

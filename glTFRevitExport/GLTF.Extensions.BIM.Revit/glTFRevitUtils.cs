@@ -29,7 +29,7 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
                 .Select(x => (BuiltInParameter)Enum.Parse(typeof(BuiltInParameter), x))
                 .ToArray();
 
-		public static Dictionary<string, object> GetProperties(glTFBIMExtension target, Element element)
+		public static Dictionary<string, Tuple<string, object>> GetProperties(glTFBIMExtension target, Element element)
 		{
 			var excludeParams = new List<BuiltInParameter>(excludeBuiltinParams);
 
@@ -165,7 +165,7 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
         /// Return a dictionary of all the given 
         /// element parameter names and values.
         /// </summary>
-        static Dictionary<string, object> GetParamValues(Element e, List<BuiltInParameter> exclude = null) {
+        static Dictionary<string, Tuple<string,object>> GetParamValues(Element e, List<BuiltInParameter> exclude = null) {
             // private function to find a parameter in a list of builins
             bool containsParameter(List<BuiltInParameter> paramList, Parameter param) {
                 if (param.Definition is InternalDefinition paramDef)
@@ -175,7 +175,7 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
                 return false;
             }
             // TODO: this needs a formatter for prop name and value
-            var paramData = new Dictionary<string, object>();
+            var paramData = new Dictionary<string, Tuple<string, object>>();
             foreach (var param in e.GetOrderedParameters()) {
                 // exclude requested params (only applies to internal params)
                 if (exclude != null && containsParameter(exclude, param))
@@ -188,7 +188,7 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
                 // skip useless values
                 var paramValue = param.ToGLTF();
                 if (paramValue is null) continue;
-                if (paramValue is int intVal && intVal == -1) continue;
+                if (paramValue.Item2 is int intVal && intVal == -1) continue;
 
                 // add value to dict
                 if (!paramData.ContainsKey(paramName))

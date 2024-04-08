@@ -92,15 +92,17 @@ namespace GLTFRevitExport.Extensions {
 #endif
         }
 
-        public static object ToGLTF(this Parameter param) {
+        public static Tuple<string,object> ToGLTF(this Parameter param) {
             try
             {
+                object value = null;
 				switch (param.StorageType)
 				{
 					case StorageType.None: break;
 
 					case StorageType.String:
-						return param.AsString();
+						value = param.AsString();
+                        break;
 
 					case StorageType.Integer:
 #if REVIT2022 || REVIT2023 || REVIT2024
@@ -108,16 +110,22 @@ namespace GLTFRevitExport.Extensions {
 #else
 						if (param.Definition.ParameterType == ParameterType.YesNo)
 #endif
-							return param.AsInteger() != 0;
+							value = param.AsInteger() != 0;
 						else
-							return param.AsInteger();
+							value = param.AsInteger();
+                    break;
 
 					case StorageType.Double:
-						return param.ToGLTF(param.AsDouble());
+						value = param.ToGLTF(param.AsDouble());
+                        break;
 
 					case StorageType.ElementId:
-						return param.AsElementId().IntegerValue;
+						value = param.AsElementId().IntegerValue;
+                        break;
 				}
+
+                string typeString = param.Definition.GetDataType().TypeId;
+                return new Tuple<string, object>(TrimParamType(typeString), value);
 			}
             catch (Exception)
             {
@@ -125,6 +133,30 @@ namespace GLTFRevitExport.Extensions {
             }
             return null;
         }
+
+        private static string TrimParamType(string typeId)
+        {
+
+
+			if (!string.IsNullOrWhiteSpace(typeId))
+			{
+				int colonIndex = typeId.IndexOf(":");
+				int dashIndex = typeId.IndexOf("-");
+
+				if (colonIndex != -1 && dashIndex != -1)
+				{
+					string trimmedTypeId = typeId.Substring(colonIndex + 1, dashIndex - colonIndex - 1);
+                    
+                    int dotIndex = trimmedTypeId.LastIndexOf('.');
+                    if(dotIndex != -1)
+						trimmedTypeId = trimmedTypeId.Substring(dotIndex + 1);
+
+					return trimmedTypeId;
+				}
+			}
+
+            return "generic";
+		}
 
         public static bool IsBIC(this Category c, BuiltInCategory bic)
             => c.Id.IntegerValue == (int)bic;

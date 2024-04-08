@@ -30,7 +30,11 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
                 }
                 else
                     // embed properties
-                    Properties = GetProjectInfo(d);
+                    {
+                        Dictionary<string, Tuple<string, object>> docProperties = GetProjectInfo(d);
+                        foreach (var prop in docProperties)
+						    Properties.Add(prop.Key, prop.Value.Item2);
+					}
             }
         }
 
@@ -47,8 +51,8 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
             return ExportUtils.GetGBXMLDocumentId(doc);
         }
 
-        static Dictionary<string, object> GetProjectInfo(Document doc) {
-            var docProps = new Dictionary<string, object>();
+        static Dictionary<string, Tuple<string, object>> GetProjectInfo(Document doc) {
+            var docProps = new Dictionary<string, Tuple<string, object>>();
             if (doc != null) {
                 var pinfo = doc.ProjectInformation;
 
