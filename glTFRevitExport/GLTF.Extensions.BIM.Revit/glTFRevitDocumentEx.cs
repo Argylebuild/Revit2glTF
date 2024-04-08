@@ -30,7 +30,11 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
                 }
                 else
                     // embed properties
-                    Properties = GetProjectInfo(d);
+                    {
+                        Dictionary<string, Tuple<string, object>> docProperties = GetProjectInfo(d);
+                        foreach (var prop in docProperties)
+						    Properties.Add(prop.Key, prop.Value.Item2);
+					}
             }
         }
 
@@ -47,23 +51,24 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
             return ExportUtils.GetGBXMLDocumentId(doc);
         }
 
-        static Dictionary<string, object> GetProjectInfo(Document doc) {
-            var docProps = new Dictionary<string, object>();
+        static Dictionary<string, Tuple<string, object>> GetProjectInfo(Document doc) {
+            var docProps = new Dictionary<string, Tuple<string, object>>();
             if (doc != null) {
                 var pinfo = doc.ProjectInformation;
 
-                foreach (BuiltInParameter paramId in new BuiltInParameter[] {
-                    BuiltInParameter.PROJECT_ORGANIZATION_NAME,
-                    BuiltInParameter.PROJECT_ORGANIZATION_DESCRIPTION,
-                    BuiltInParameter.PROJECT_NUMBER,
-                    BuiltInParameter.PROJECT_NAME,
-                    BuiltInParameter.CLIENT_NAME,
-                    BuiltInParameter.PROJECT_BUILDING_NAME,
-                    BuiltInParameter.PROJECT_ISSUE_DATE,
-                    BuiltInParameter.PROJECT_STATUS,
-                    BuiltInParameter.PROJECT_AUTHOR,
-                    BuiltInParameter.PROJECT_ADDRESS,
-                }) {
+                var builtInParams = new List<BuiltInParameter>();
+                builtInParams.Add(BuiltInParameter.PROJECT_ORGANIZATION_NAME);
+                builtInParams.Add(BuiltInParameter.PROJECT_ORGANIZATION_DESCRIPTION);
+                builtInParams.Add(BuiltInParameter.PROJECT_NUMBER);
+                builtInParams.Add(BuiltInParameter.PROJECT_NAME);
+                builtInParams.Add(BuiltInParameter.CLIENT_NAME);
+                builtInParams.Add(BuiltInParameter.PROJECT_BUILDING_NAME);
+                builtInParams.Add(BuiltInParameter.PROJECT_ISSUE_DATE);
+                builtInParams.Add(BuiltInParameter.PROJECT_STATUS);
+                builtInParams.Add(BuiltInParameter.PROJECT_AUTHOR);
+                builtInParams.Add(BuiltInParameter.PROJECT_ADDRESS);
+
+                foreach (BuiltInParameter paramId in builtInParams) {
                     var param = pinfo.get_Parameter(paramId);
                     if (param != null) {
                         var paramValue = param.ToGLTF();

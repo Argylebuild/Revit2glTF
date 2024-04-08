@@ -77,7 +77,7 @@ namespace GLTFRevitExport.Extensions {
 
         public static double ToGLTF(this Parameter p, double value) {
             // TODO: read value unit and convert correctly
-#if REVIT2022 || REVIT2023
+#if REVIT2021 || REVIT2022 || REVIT2023 || REVIT2024
             string typeId = p.Definition.GetDataType().TypeId;
             if (typeId.StartsWith("autodesk.spec.aec:length"))
                 return value.ToGLTFLength();
@@ -92,31 +92,71 @@ namespace GLTFRevitExport.Extensions {
 #endif
         }
 
-        public static object ToGLTF(this Parameter param) {
-            switch (param.StorageType) {
-                case StorageType.None: break;
+        public static Tuple<string,object> ToGLTF(this Parameter param) {
+            try
+            {
+                object value = null;
+				switch (param.StorageType)
+				{
+					case StorageType.None: break;
 
-                case StorageType.String:
-                    return param.AsString();
+					case StorageType.String:
+						value = param.AsString();
+                        break;
 
-                case StorageType.Integer:
-#if REVIT2022 || REVIT2023
+					case StorageType.Integer:
+#if REVIT2022 || REVIT2023 || REVIT2024
                     if (param.Definition.GetDataType().TypeId.StartsWith("autodesk.spec:spec.bool"))
 #else
-                    if (param.Definition.ParameterType == ParameterType.YesNo)
+						if (param.Definition.ParameterType == ParameterType.YesNo)
 #endif
-                        return param.AsInteger() != 0;
-                    else
-                        return param.AsInteger();
+							value = param.AsInteger() != 0;
+						else
+							value = param.AsInteger();
+                    break;
 
-                case StorageType.Double:
-                    return param.ToGLTF(param.AsDouble());
+					case StorageType.Double:
+						value = param.ToGLTF(param.AsDouble());
+                        break;
 
-                case StorageType.ElementId:
-                    return param.AsElementId().IntegerValue;
+					case StorageType.ElementId:
+						value = param.AsElementId().IntegerValue;
+                        break;
+				}
+
+                string typeString = param.Definition.GetDataType().TypeId;
+                return new Tuple<string, object>(TrimParamType(typeString), value);
+			}
+            catch (Exception)
+            {
+                Console.WriteLine($"Error converting parameter {param.Definition.Name} to glTF");
             }
             return null;
         }
+
+        private static string TrimParamType(string typeId)
+        {
+
+
+			if (!string.IsNullOrWhiteSpace(typeId))
+			{
+				int colonIndex = typeId.IndexOf(":");
+				int dashIndex = typeId.IndexOf("-");
+
+				if (colonIndex != -1 && dashIndex != -1)
+				{
+					string trimmedTypeId = typeId.Substring(colonIndex + 1, dashIndex - colonIndex - 1);
+                    
+                    int dotIndex = trimmedTypeId.LastIndexOf('.');
+                    if(dotIndex != -1)
+						trimmedTypeId = trimmedTypeId.Substring(dotIndex + 1);
+
+					return trimmedTypeId;
+				}
+			}
+
+            return "generic";
+		}
 
         public static bool IsBIC(this Category c, BuiltInCategory bic)
             => c.Id.IntegerValue == (int)bic;

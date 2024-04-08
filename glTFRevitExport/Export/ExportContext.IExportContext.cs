@@ -23,11 +23,22 @@ namespace GLTFRevitExport.Export {
     sealed partial class ExportContext : IExportContext, IExportContextBase, IModelExportContext {
 #endif
         public List<Element> NonExportedElements { get; set; } = new List<Element>();
+        public static Element Element { get; set; } = null;
+        private Transform CurrentTransform
+        {
+            get
+            {
+                return _transformStack.Peek();
+            }
+        }
 
         #region Start, Stop, Cancel
         // Runs once at beginning of export. Sets up the root node
         // and scene.
         public bool Start() {
+
+            _transformStack.Push(Transform.Identity);
+
             // Do not need to do anything here
             // _glTF is already instantiated
             Logger.Log("+ start collect");
@@ -336,6 +347,11 @@ namespace GLTFRevitExport.Export {
         // This is called when family instances are encountered, after OnElementBegin
         public RenderNodeAction OnInstanceBegin(InstanceNode node) {
             Logger.Log("+ instance start");
+
+            var transform = node.GetTransform();
+            var transformationMutiply = CurrentTransform.Multiply(transform);
+            _transformStack.Push(transformationMutiply);
+
             return RenderNodeAction.Proceed;
         }
 
@@ -343,17 +359,24 @@ namespace GLTFRevitExport.Export {
             // NOTE: only add the transform if geometry has already collected
             // for this instance, from the OnFace and OnPolymesh calls between
             // OnInstanceBegin and  OnInstanceEnd
-            if (_partStack.Count > 0) {
-                Logger.Log("> transform");
-                float[] matrix = node.GetTransform().ToGLTF();
-                _actions.Enqueue(new ElementTransformAction(matrix));
-            }
+
+            _transformStack.Pop();
+
+            //if (_partStack.Count > 0) {
+            //    Logger.Log("> transform");
+            //    float[] matrix = node.GetTransform().ToGLTF();
+            //    _actions.Enqueue(new ElementTransformAction(matrix));
+            //}
+
             Logger.Log("- instance end");
         }
         #endregion
 
         #region Linked Models
         public RenderNodeAction OnLinkBegin(LinkNode node) {
+
+            _transformStack.Push(CurrentTransform.Multiply(node.GetTransform()));
+
             if (_docStack.Peek() is Document) {
                 if (_cfgs.ExportLinkedModels) {
                     // Link element info is processed by the OnElement before
@@ -392,6 +415,8 @@ namespace GLTFRevitExport.Export {
                     _linkMatrix = null;
                 }
             }
+
+            _transformStack.Pop();
         }
         #endregion
 
@@ -467,13 +492,18 @@ namespace GLTFRevitExport.Export {
                 Logger.Log("> polymesh");
                 var activePart = _partStack.Peek();
 
-                List<VectorData> vertices =
-                    polymesh.GetPoints().Select(x => new VectorData(x)).ToList();
+                var transform = CurrentTransform;
 
-                List<FacetData> faces =
-                    polymesh.GetFacets().Select(x => new FacetData(x)).ToList();
+                // Vertices
+                var polymeshPoints = polymesh.GetPoints().ToList();
+                polymeshPoints = polymeshPoints.Select(p => transform.OfPoint(p)).ToList();
+                List<VectorData> vertices = polymeshPoints.Select(x => new VectorData(x)).ToList();
 
-                var newPrim = new PrimitiveData(vertices, faces);
+                // Faces
+                var polymeshFacets = polymesh.GetFacets().ToList();
+                List<FacetData> facetDatas = polymeshFacets.Select(x => new FacetData(x)).ToList();
+
+                var newPrim = new PrimitiveData(vertices, facetDatas);
 
                 if (activePart.HasPartData)
                     activePart.Primitive += newPrim;
