@@ -11,14 +11,18 @@ namespace GLTFRevitExport.Build.Geometry {
             V2 = (uint)f.V2;
             V3 = (uint)f.V3;
         }
+        
+        public FacetData() { }
 
         public uint[] ToArray() => new uint[] { V1, V2, V3 };
 
         public static FacetData operator +(FacetData left, uint shift) {
-            left.V1 += shift;
-            left.V2 += shift;
-            left.V3 += shift;
-            return left;
+            return new FacetData {
+                V1 = left.V1 + shift,
+                V2 = left.V2 + shift,
+                V3 = left.V3 + shift
+            };
         }
+
     }
 }
