@@ -48,6 +48,14 @@
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <RevitVersion>2024</RevitVersion>
   </PropertyGroup>
+  <PropertyGroup Condition="$(Configuration.Contains('2025'))">
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <RevitVersion>2025</RevitVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(Configuration.Contains('2026'))">
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <RevitVersion>2026</RevitVersion>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2017|x64'">
     <OutputPath>bin\Debug2017\</OutputPath>
     <DebugSymbols>true</DebugSymbols>
@@ -211,7 +219,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2025|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug2025\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;REVIT2024</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;REVIT2025</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <LangVersion>11</LangVersion>
@@ -220,7 +228,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2026|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug2026\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;REVIT2024</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;REVIT2026</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <LangVersion>11</LangVersion>
@@ -228,7 +236,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release2025|x64'">
     <OutputPath>bin\x64\Release2025\</OutputPath>
-    <DefineConstants>REVIT2024</DefineConstants>
+    <DefineConstants>REVIT2025</DefineConstants>
     <Optimize>true</Optimize>
     <PlatformTarget>x64</PlatformTarget>
     <LangVersion>11</LangVersion>
@@ -236,7 +244,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release2026|x64'">
     <OutputPath>bin\x64\Release2026\</OutputPath>
-    <DefineConstants>REVIT2024</DefineConstants>
+    <DefineConstants>REVIT2026</DefineConstants>
     <Optimize>true</Optimize>
     <PlatformTarget>x64</PlatformTarget>
     <LangVersion>11</LangVersion>
@@ -280,6 +288,22 @@
     </Reference>
     <Reference Include="RevitAPIUI">
       <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2024.0.0\lib\net48\RevitAPIUI.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="$(Configuration.Contains('2025'))">
+    <Reference Include="RevitAPI">
+      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2025.0.0\lib\net48\RevitAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2025.0.0\lib\net48\RevitAPIUI.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="$(Configuration.Contains('2026'))">
+    <Reference Include="RevitAPI">
+      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2026.0.0\lib\net48\RevitAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2026.0.0\lib\net48\RevitAPIUI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -357,7 +381,7 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2022.1.0" />
+    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2026.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\lib\glTF2BIM\GLTF2BIM\GLTF2BIM.csproj">
