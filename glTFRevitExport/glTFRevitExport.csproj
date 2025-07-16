@@ -208,6 +208,40 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2025|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug2025\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;REVIT2024</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>11</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2026|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug2026\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;REVIT2024</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>11</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release2025|x64'">
+    <OutputPath>bin\x64\Release2025\</OutputPath>
+    <DefineConstants>REVIT2024</DefineConstants>
+    <Optimize>true</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>11</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release2026|x64'">
+    <OutputPath>bin\x64\Release2026\</OutputPath>
+    <DefineConstants>REVIT2024</DefineConstants>
+    <Optimize>true</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>11</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
   <ItemGroup Condition="$(Configuration.Contains('2020'))">
     <Reference Include="RevitAPI">
       <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2020.0.0\lib\net48\RevitAPI.dll</HintPath>
