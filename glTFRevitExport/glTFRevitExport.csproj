@@ -292,18 +292,18 @@
   </ItemGroup>
   <ItemGroup Condition="$(Configuration.Contains('2025'))">
     <Reference Include="RevitAPI">
-      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2025.0.0\lib\net48\RevitAPI.dll</HintPath>
+      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2024.0.0\lib\net48\RevitAPI.dll</HintPath>
     </Reference>
     <Reference Include="RevitAPIUI">
-      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2025.0.0\lib\net48\RevitAPIUI.dll</HintPath>
+      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2024.0.0\lib\net48\RevitAPIUI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup Condition="$(Configuration.Contains('2026'))">
     <Reference Include="RevitAPI">
-      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2026.0.0\lib\net48\RevitAPI.dll</HintPath>
+      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2024.0.0\lib\net48\RevitAPI.dll</HintPath>
     </Reference>
     <Reference Include="RevitAPIUI">
-      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2026.0.0\lib\net48\RevitAPIUI.dll</HintPath>
+      <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2024.0.0\lib\net48\RevitAPIUI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -381,7 +381,7 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2026.0.0" />
+    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2022.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\lib\glTF2BIM\GLTF2BIM\GLTF2BIM.csproj">
