@@ -77,20 +77,20 @@ namespace GLTFRevitExport.Extensions {
 
         public static double ToGLTF(this Parameter p, double value) {
             // TODO: read value unit and convert correctly
-#if REVIT2021 || REVIT2022 || REVIT2023 || REVIT2024
-            string typeId = p.Definition.GetDataType().TypeId;
-            if (typeId.StartsWith("autodesk.spec.aec:length"))
-                return value.ToGLTFLength();
-            return value;
-#else
+#if REVIT2020 
             switch (p.Definition.UnitType) {
                 case UnitType.UT_Length:
                     return value.ToGLTFLength();
                 default:
                     return value;
             }
+#else
+			string typeId = p.Definition.GetDataType().TypeId;
+			if (typeId.StartsWith("autodesk.spec.aec:length"))
+				return value.ToGLTFLength();
+			return value;
 #endif
-        }
+		}
 
         public static Tuple<string,object> ToGLTF(this Parameter param) {
             try
@@ -105,10 +105,10 @@ namespace GLTFRevitExport.Extensions {
                         break;
 
 					case StorageType.Integer:
-#if REVIT2022 || REVIT2023 || REVIT2024
-                    if (param.Definition.GetDataType().TypeId.StartsWith("autodesk.spec:spec.bool"))
-#else
+#if REVIT2020 || REVIT2021
 						if (param.Definition.ParameterType == ParameterType.YesNo)
+#else
+                        if (param.Definition.GetDataType().TypeId.StartsWith("autodesk.spec:spec.bool"))
 #endif
 							value = param.AsInteger() != 0;
 						else
