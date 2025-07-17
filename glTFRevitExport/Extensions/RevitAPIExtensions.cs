@@ -96,10 +96,11 @@ namespace GLTFRevitExport.Extensions {
                         break;
 
 					case StorageType.Integer:
-#if REVIT2022 || REVIT2023 || REVIT2024
-                    if (param.Definition.GetDataType().TypeId.StartsWith("autodesk.spec:spec.bool"))
-#else
+
+#if REVIT2021
 						if (param.Definition.ParameterType == ParameterType.YesNo)
+#else
+						if (param.Definition.GetDataType().TypeId.StartsWith("autodesk.spec:spec.bool"))
 #endif
 							value = param.AsInteger() != 0;
 						else
@@ -111,7 +112,11 @@ namespace GLTFRevitExport.Extensions {
                         break;
 
 					case StorageType.ElementId:
-						value = param.AsElementId().IntegerValue;
+#if REVIT2026
+                        value = param.AsElementId().Value;
+#else
+                        value = param.AsElementId().IntegerValue;
+#endif     
                         break;
 				}
 
