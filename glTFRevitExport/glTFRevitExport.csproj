@@ -122,26 +122,11 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release2026|x64'">
-    <OutputPath>bin\Release2026\</OutputPath>
-    <DefineConstants>REVIT2026</DefineConstants>
-    <Optimize>true</Optimize>
-    <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>11</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2025|x64'">
     <OutputPath>bin\Debug2025\</OutputPath>
     <Prefer32Bit>false</Prefer32Bit>
     <DefineConstants>TRACE;DEBUG;REVIT2025</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2026|x64'">
-    <OutputPath>bin\Debug2026\</OutputPath>
-    <PlatformTarget>x64</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
-    <DefineConstants>TRACE;DEBUG;REVIT2026</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="$(Configuration.Contains('2021'))">
     <Reference Include="RevitAPI">
