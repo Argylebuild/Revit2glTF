@@ -16,7 +16,7 @@ namespace GLTFRevitExport.Build.Geometry {
         }
 
         public static PrimitiveData operator +(PrimitiveData left, PrimitiveData right) {
-            int startIdx = left.Vertices.Count;
+            uint startIdx = (uint) left.Vertices.Count;
 
             // new vertices array
             var vertices = new List<VectorData>(left.Vertices);
@@ -25,7 +25,7 @@ namespace GLTFRevitExport.Build.Geometry {
             // shift face indices
             var faces = new List<FacetData>(left.Faces);
             foreach (var faceIdx in right.Faces)
-                faces.Add(faceIdx + (ushort)startIdx);
+                faces.Add(faceIdx + startIdx);
 
             return new PrimitiveData(vertices, faces);
         }
