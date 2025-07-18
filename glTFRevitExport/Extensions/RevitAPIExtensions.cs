@@ -157,7 +157,7 @@ namespace GLTFRevitExport.Extensions {
             => c.Id.IntegerValue == (int)bic;
 #endif
 
-        public static long IdIntCompatible(this Element e) => e.Id.Value;
+        public static long IdIntCompatible(this Element e) => e.Id.IdIntCompatible();
 
         /// <summary>
         /// To let the references to the integer version of Ids be compatible to Revit versions before and after 2026, we need a precompile tool to use the different versions. 
