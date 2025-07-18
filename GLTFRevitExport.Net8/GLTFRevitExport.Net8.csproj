@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- ================ core settings ================ -->
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>              <!-- only needed if XAML is present -->
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>false</ImplicitUsings>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AssemblyName>Argyle.glTFRevitExport</AssemblyName>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <!-- ================ 2026 build configuration ================ -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2026|x64'">
+    <OutputPath>..\build\Release2026\</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants>REVIT;REVIT2026</DefineConstants>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <!-- ================ source sharing ================ -->
+  <ItemGroup>
+    <Compile Include="..\GLTFRevitExport\**\*.cs"
+            Exclude="..\GLTFRevitExport.Net8\**\*.*;
+                      ..\GLTFRevitExport\obj\**\*.*;
+                      ..\GLTFRevitExport\bin\**\*.*;
+                      ..\GLTFRevitExport\**\*.g.cs;
+                      ..\GLTFRevitExport\**\*.g.i.cs" />
+                      
+    <EmbeddedResource Include="..\GLTFRevitExport\**\*.resx"
+                      Exclude="..\GLTFRevitExport\obj\**\*.*;
+                              ..\GLTFRevitExport\bin\**\*.*" />
+                              
+    <Page Include="..\GLTFRevitExport\**\*.xaml"
+          Exclude="..\GLTFRevitExport\obj\**\*.*;
+                  ..\GLTFRevitExport\bin\**\*.*" />
+  </ItemGroup>
+
+
+  <!-- ================ project references ================ -->
+  <ItemGroup>
+    <ProjectReference Include="..\lib\glTF2BIM\GLTF2BIM.Net8\GLTF2BIM.Net8.csproj" />
+  </ItemGroup>
+
+  <!-- ================ NuGet packages ================ -->
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2026.0.0" />
+  </ItemGroup>
+
+</Project>

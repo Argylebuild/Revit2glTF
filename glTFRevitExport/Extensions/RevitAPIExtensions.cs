@@ -112,11 +112,7 @@ namespace GLTFRevitExport.Extensions {
                         break;
 
 					case StorageType.ElementId:
-#if REVIT2026
-                        value = param.AsElementId().Value;
-#else
-                        value = param.AsElementId().IntegerValue;
-#endif     
+                        value = param.AsElementId().IdIntCompatible();
                         break;
 				}
 
@@ -153,12 +149,37 @@ namespace GLTFRevitExport.Extensions {
 
             return "generic";
 		}
-
+#if NET8_0_OR_GREATER
+        public static bool IsBIC(this Category c, BuiltInCategory bic)
+            => ((long) c.Id.Value) == (long)bic;
+#else
         public static bool IsBIC(this Category c, BuiltInCategory bic)
             => c.Id.IntegerValue == (int)bic;
+#endif
+
+        public static long IdIntCompatible(this Element e) => e.Id.Value;
+
+        /// <summary>
+        /// To let the references to the integer version of Ids be compatible to Revit versions before and after 2026, we need a precompile tool to use the different versions. 
+        /// Extra important because the later versions are .net8 and the earlier are 4.8
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+		public static long IdIntCompatible(this ElementId id)
+		{
+			long idValue;
+#if NET8_0_OR_GREATER
+			idValue = id.Value;
+#else
+        idValue = (long) id.IntegerValue;
+#endif
+
+			return idValue;
+		}
 
 
-        public static glTFBIMBounds TOGLTFBounds(this BoundingBoxXYZ bbox) {
+
+		public static glTFBIMBounds TOGLTFBounds(this BoundingBoxXYZ bbox) {
             return new glTFBIMBounds(
                 min: bbox.Min.ToGLTFVector(),
                 max: bbox.Max.ToGLTFVector()
