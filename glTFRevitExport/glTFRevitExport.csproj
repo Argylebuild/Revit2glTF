@@ -113,21 +113,6 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release2025|x64'">
-    <OutputPath>bin\Release2025\</OutputPath>
-    <DefineConstants>REVIT2025</DefineConstants>
-    <Optimize>true</Optimize>
-    <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>11</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2025|x64'">
-    <OutputPath>bin\Debug2025\</OutputPath>
-    <Prefer32Bit>false</Prefer32Bit>
-    <DefineConstants>TRACE;DEBUG;REVIT2025</DefineConstants>
-    <PlatformTarget>x64</PlatformTarget>
-  </PropertyGroup>
   <ItemGroup Condition="$(Configuration.Contains('2021'))">
     <Reference Include="RevitAPI">
       <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2021.0.0\lib\net48\RevitAPI.dll</HintPath>

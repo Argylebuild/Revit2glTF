@@ -3,14 +3,24 @@
   <!-- ================ core settings ================ -->
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>GLTFRevitExport</RootNamespace>
     <UseWPF>true</UseWPF>              <!-- only needed if XAML is present -->
     <Nullable>enable</Nullable>
     <ImplicitUsings>false</ImplicitUsings>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AssemblyName>Argyle.glTFRevitExport</AssemblyName>
     <Platforms>AnyCPU;x64</Platforms>
+    <Configurations>Debug;Release;Release2025;Release2026</Configurations>
   </PropertyGroup>
 
+
+  <!-- ================ 2025 build configuration ================ -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2025|x64'">
+    <OutputPath>..\build\Release2025\</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants>REVIT;REVIT2025</DefineConstants>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
   <!-- ================ 2026 build configuration ================ -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2026|x64'">
     <OutputPath>..\build\Release2026\</OutputPath>
@@ -19,22 +29,20 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
 
+    <PropertyGroup Condition="$(Configuration.Contains('2025'))">
+      <RevitVersion>2025</RevitVersion>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(Configuration.Contains('2026'))">
+      <RevitVersion>2026</RevitVersion>
+    </PropertyGroup>
+
   <!-- ================ source sharing ================ -->
   <ItemGroup>
-    <Compile Include="..\GLTFRevitExport\**\*.cs"
-            Exclude="..\GLTFRevitExport.Net8\**\*.*;
-                      ..\GLTFRevitExport\obj\**\*.*;
-                      ..\GLTFRevitExport\bin\**\*.*;
-                      ..\GLTFRevitExport\**\*.g.cs;
-                      ..\GLTFRevitExport\**\*.g.i.cs" />
+    <Compile Include="..\GLTFRevitExport\**\*.cs" Exclude="..\GLTFRevitExport.Net8\**\*.*;&#xD;&#xA;                      ..\GLTFRevitExport\obj\**\*.*;&#xD;&#xA;                      ..\GLTFRevitExport\bin\**\*.*;&#xD;&#xA;                      ..\GLTFRevitExport\**\*.g.cs;&#xD;&#xA;                      ..\GLTFRevitExport\**\*.g.i.cs" />
                       
-    <EmbeddedResource Include="..\GLTFRevitExport\**\*.resx"
-                      Exclude="..\GLTFRevitExport\obj\**\*.*;
-                              ..\GLTFRevitExport\bin\**\*.*" />
+    <EmbeddedResource Include="..\GLTFRevitExport\**\*.resx" Exclude="..\GLTFRevitExport\obj\**\*.*;&#xD;&#xA;                              ..\GLTFRevitExport\bin\**\*.*" />
                               
-    <Page Include="..\GLTFRevitExport\**\*.xaml"
-          Exclude="..\GLTFRevitExport\obj\**\*.*;
-                  ..\GLTFRevitExport\bin\**\*.*" />
+    <Page Include="..\GLTFRevitExport\**\*.xaml" Exclude="..\GLTFRevitExport\obj\**\*.*;&#xD;&#xA;                  ..\GLTFRevitExport\bin\**\*.*" />
   </ItemGroup>
 
 
@@ -46,16 +54,9 @@
   <!-- ================ NuGet packages ================ -->
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2026.0.0" />
+    <PackageReference Include="Revit_All_Main_Versions_API_x64"
+                  Version="$(RevitVersion).0.0" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <RootNamespace>GLTFRevitExport</RootNamespace> <!-- explicitly set this -->
-    <AssemblyName>Argyle.glTFRevitExport</AssemblyName> <!-- keep as-is -->
-    <UseWPF>true</UseWPF>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
 
 
 </Project>
