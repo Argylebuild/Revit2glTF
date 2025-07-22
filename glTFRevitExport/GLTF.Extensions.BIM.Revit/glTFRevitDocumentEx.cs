@@ -78,11 +78,14 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
                 }
 
                 foreach (Parameter param in pinfo.Parameters)
-                    if (param.Id.IntegerValue > 0) {
+                {
+					if (param.Id.IdIntCompatible() > 0)
+                    {
                         var paramValue = param.ToGLTF();
                         if (paramValue != null)
                             docProps.Add(GetValidName(param), paramValue);
                     }
+                }
             }
             return docProps;
 

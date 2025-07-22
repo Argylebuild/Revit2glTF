@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Diagnostics;
 using Autodesk.Revit.DB;
+using GLTFRevitExport.Extensions;
 
 namespace GLTFRevitExport.Build {
     class Logger {
@@ -17,11 +18,13 @@ namespace GLTFRevitExport.Build {
         public static void LogElement(string message, Element e) {
 #if DEBUG
             if (e != null)
+            {
                 message +=
-                    $"\n└ id={e.Id.IntegerValue} " +
+                    $"\n└ id={e.IdIntCompatible()} " +
                         $"name={e.Name} " +
                         $"type={e.GetType()} " +
                         $"category={e.Category?.Name}";
+            }
             Log(message);
 #endif
         }

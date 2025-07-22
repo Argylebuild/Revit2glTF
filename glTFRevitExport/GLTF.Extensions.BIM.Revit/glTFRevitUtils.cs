@@ -58,7 +58,7 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
 				}
 				catch (Exception ex)
 				{
-					Console.WriteLine($"Error setting property {propInfo.Name} on {target.GetType().Name} for element {element.Id.IntegerValue}: {ex.Message}");
+					Console.WriteLine($"Error setting property {propInfo.Name} on {target.GetType().Name} for element {element.IdIntCompatible()}: {ex.Message}");
 				}
 			}
 
@@ -139,13 +139,16 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
 
         public static List<string> GetClasses(Element e) {
             var classes = new List<string>();
-            // TODO: get correct uniformat category
+            // TODO: get correct uniformat category and make compatible
+#if NET8_0_OR_GREATER
+#else
             classes.Add(
                 $"uniformat/{GetParamValue(e, BuiltInParameter.UNIFORMAT_CODE)}".UriEncode()
                 );
             classes.Add(
                 $"omniclass/{GetParamValue(e, BuiltInParameter.OMNICLASS_CODE)}".UriEncode()
                 );
+#endif
 
             // TODO: get classed from various industry standards e.g. IFC
             switch (e) {
@@ -170,7 +173,7 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
             bool containsParameter(List<BuiltInParameter> paramList, Parameter param) {
                 if (param.Definition is InternalDefinition paramDef)
                     foreach (var paramId in paramList)
-                        if (paramDef.Id.IntegerValue == (int)paramId)
+                        if (paramDef.Id.IdIntCompatible() == (long)paramId)
                             return true;
                 return false;
             }
@@ -202,5 +205,8 @@ namespace GLTFRevitExport.GLTF.Extensions.BIM.Revit {
                 return param.ToGLTF();
             return null;
         }
-    }
+
+
+
+	}
 }
