@@ -10,7 +10,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AssemblyName>Argyle.glTFRevitExport</AssemblyName>
     <Platforms>AnyCPU;x64</Platforms>
-    <Configurations>Debug;Release;Release2025;Release2026</Configurations>
+    <Configurations>Debug;Release;Release2025;Release2026;Debug2025;Debug2026</Configurations>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
@@ -22,6 +22,18 @@
     <PlatformTarget>x64</PlatformTarget>
     <DefineConstants>REVIT;REVIT2025</DefineConstants>
     <Optimize>true</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug2025|x64'">
+    <OutputPath>..\build\Release2025\</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants>REVIT;REVIT2025</DefineConstants>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug2026|x64'">
+    <OutputPath>..\build\Release2026\</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants>REVIT;REVIT2026</DefineConstants>
+    <Optimize>false</Optimize>
   </PropertyGroup>
   <!-- ================ 2026 build configuration ================ -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2026|x64'">
@@ -56,8 +68,7 @@
   <!-- ================ NuGet packages ================ -->
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Revit_All_Main_Versions_API_x64"
-                  Version="$(RevitVersion).0.0" />
+    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="$(RevitVersion).0.0" />
   </ItemGroup>
 
 
