@@ -46,6 +46,8 @@ namespace GLTFRevitExport.Export {
             // reset other stacks
             _processed.Clear();
             _skipElement = false;
+            _currentElement = null;
+            _elementLineParts.Clear();
 
             var doc = _docStack.Last();
             _docStack.Clear();
@@ -186,6 +188,9 @@ namespace GLTFRevitExport.Export {
         public RenderNodeAction OnElementBegin(ElementId eid) {
             if (_docStack.Peek() is Document doc) {
                 Element e = doc.GetElement(eid);
+                _currentElement = e;
+                // drop any stray line geometry collected outside an element scope
+                _elementLineParts.Clear();
 
                 // TODO: take a look at elements that have no type
                 // skipping these for now
@@ -193,8 +198,14 @@ namespace GLTFRevitExport.Export {
                 // DB.Opening
                 // DB.FaceSplitter
                 // DB.Spatial
-                if (!(doc.GetElement(e.GetTypeId()) is ElementType et))
-                    goto SkipElementLabel;
+                ElementType et = doc.GetElement(e.GetTypeId()) as ElementType;
+                if (et is null) {
+                    // curve elements (model lines/arcs) have no element type
+                    // but carry thin-line geometry; let them through with a
+                    // null type when exporting lines
+                    if (!(_cfgs.ExportLines && e is CurveElement))
+                        goto SkipElementLabel;
+                }
 
                 // TODO: fix inneficiency in getting linked elements multiple times
                 // this affects links that have multiple instances
@@ -279,9 +290,20 @@ namespace GLTFRevitExport.Export {
 
         // Runs at the end of an element being processed, after all other calls for that element.
         public void OnElementEnd(ElementId eid) {
-            if (_skipElement)
+            if (_skipElement) {
                 _skipElement = false;
+                // drop any line geometry collected for the skipped element
+                _elementLineParts.Clear();
+            }
             else {
+                // merge line parts collected for this element into the part
+                // stack so they flow through bounds/localize/enqueue with
+                // the mesh parts
+                bool hasLineParts = _elementLineParts.Count > 0;
+                foreach (var linePart in _elementLineParts.Values)
+                    _partStack.Push(linePart);
+                _elementLineParts.Clear();
+
                 // if has mesh data
                 if (_partStack.Count > 0) {
                     // calculate the bounding box from the parts data
@@ -307,11 +329,19 @@ namespace GLTFRevitExport.Export {
 
                     _actions.Enqueue(new ElementBoundsAction(bounds));
 
+                    // record the dominant pen weight of the element's lines
+                    // on its node extension
+                    if (hasLineParts
+                            && _docStack.Peek() is Document lineDoc
+                            && GetElementLineWeight(lineDoc.GetElement(eid)) is int lineWeight)
+                        _actions.Enqueue(new ElementLineWeightAction(lineWeight));
+
                     // Preventing elements which have null lists of faces or vertices.
                     bool shouldSkip = false;
                     foreach (var pd in _partStack.Where(x => x.Primitive != null))
-                    {                        
-                        if (!pd.Primitive.Vertices.Any() || !pd.Primitive.Faces.Any())
+                    {
+                        if (!pd.Primitive.Vertices.Any()
+                            || (!pd.Primitive.Faces.Any() && !pd.Primitive.Lines.Any()))
                         {
                             shouldSkip = true;
                             if (_docStack.Peek() is Document document)
@@ -526,22 +556,41 @@ namespace GLTFRevitExport.Export {
             Logger.Log("> light");
         }
 
+        // Curves/polylines are delivered here because the exporter sets
+        // CustomExporter.IncludeGeometricObjects = true. The geometry is
+        // harvested directly and Skip is returned so Revit does not re-send
+        // it as tessellated line segments
         public RenderNodeAction OnCurve(CurveNode node) {
             Logger.Log("> curve");
+            if (_cfgs.ExportLines)
+                CollectLineGeometry(node.GetCurve().Tessellate(), node.LineProperties);
             return RenderNodeAction.Skip;
         }
 
         public RenderNodeAction OnPolyline(PolylineNode node) {
             Logger.Log("> polyline");
+            if (_cfgs.ExportLines)
+                CollectLineGeometry(node.GetPolyline().GetCoordinates(), node.LineProperties);
             return RenderNodeAction.Skip;
         }
 
+        // Called after an unhandled curve is tessellated to line segments.
+        // This is the delivery path for thin-line geometry (model curves,
+        // MEP centerlines at coarse/medium detail) while the exporter runs
+        // with CustomExporter.IncludeGeometricObjects = false
         public void OnLineSegment(LineSegment segment) {
             Logger.Log("> line segment");
+            if (_cfgs.ExportLines)
+                CollectLineGeometry(
+                    new List<XYZ> { segment.StartPoint, segment.EndPoint },
+                    segment.LineProperties
+                    );
         }
 
         public void OnPolylineSegments(PolylineSegments segments) {
-            Logger.Log("> polyline segment");
+            Logger.Log("> polyline segments");
+            if (_cfgs.ExportLines)
+                CollectLineGeometry(segments.GetVertices(), segments.LineProperties);
         }
 
         public void OnText(TextNode node) {

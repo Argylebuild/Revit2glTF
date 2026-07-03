@@ -52,6 +52,12 @@ namespace GLTFRevitExport {
         public bool ExportMaterials { get; set; } = false;
 
         /// <summary>
+        /// Export thin-line geometry (model curves, MEP centerlines)
+        /// as glTF LINES primitives
+        /// </summary>
+        public bool ExportLines { get; set; } = true;
+
+        /// <summary>
         /// Cancellation toke for cancelling the export progress
         /// </summary>
         public CancellationToken CancelToken;

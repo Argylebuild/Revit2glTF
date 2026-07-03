@@ -34,7 +34,11 @@ namespace GLTFRevitExport {
 
 
             var exp = new CustomExporter(view.Document, _ctx) {
-                ShouldStopOnError = true
+                ShouldStopOnError = true,
+                // deliver curves/polylines to OnCurve/OnPolyline so thin-line
+                // geometry can be exported; without this Revit drops them
+                // (verified empirically - no segment callbacks fire otherwise)
+                IncludeGeometricObjects = true
             };
 
             // export View3D was deprecated in Revit 2020 and above

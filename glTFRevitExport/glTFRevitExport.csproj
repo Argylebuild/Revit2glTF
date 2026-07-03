@@ -187,6 +187,7 @@
     <Compile Include="Build\Actions\_ElementActions\ElementEndAction.cs" />
     <Compile Include="Build\Actions\_ElementActions\ElementBeginAction.cs" />
     <Compile Include="Build\Actions\_ElementActions\ElementBoundsAction.cs" />
+    <Compile Include="Build\Actions\_ElementActions\ElementLineWeightAction.cs" />
     <Compile Include="Build\Actions\_ElementActions\ElementTransformAction.cs" />
     <Compile Include="Build\Actions\_LinkActions\LinkBeginAction.cs" />
     <Compile Include="Build\Actions\_LinkActions\LinkBoundsAction.cs" />
@@ -202,6 +203,7 @@
     <Compile Include="Build\Geometry\FacetData.cs" />
     <Compile Include="Build\Geometry\PartData.cs" />
     <Compile Include="Build\Geometry\PrimitiveData.cs" />
+    <Compile Include="Build\Geometry\SegmentData.cs" />
     <Compile Include="Build\Geometry\VectorData.cs" />
     <Compile Include="Collector\Collector.cs" />
     <Compile Include="Export\ExportContext.Data.cs" />

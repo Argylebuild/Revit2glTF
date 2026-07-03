@@ -213,6 +213,8 @@ namespace GLTFRevitExport.Export {
             _actions.Clear();
             _processed.Clear();
             _skipElement = false;
+            _currentElement = null;
+            _elementLineParts.Clear();
         }
     }
 }

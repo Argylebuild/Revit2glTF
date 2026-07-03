@@ -96,6 +96,90 @@ namespace GLTFRevitExport.Export {
             return finalBounds;
         }
 
+        void CollectLineGeometry(IList<XYZ> points, LineProperties lineProps) {
+            try {
+                CollectLineGeometryImpl(points, lineProps);
+            }
+            catch (Exception ex) {
+                // never abort the export over a single bad curve
+                // (CustomExporter.ShouldStopOnError is true)
+                Logger.Log($"x line geometry failed: {ex.Message}");
+            }
+        }
+
+        void CollectLineGeometryImpl(IList<XYZ> points, LineProperties lineProps) {
+            if (points is null || points.Count < 2)
+                return;
+
+            var transform = CurrentTransform;
+
+            // points form a connected chain; segments share the chain vertices
+            var vertices = new List<VectorData>();
+            foreach (var point in points)
+                vertices.Add(new VectorData(transform.OfPoint(point)));
+
+            var lines = new List<SegmentData>();
+            for (int i = 0; i < vertices.Count - 1; i++) {
+                // skip zero-length segments
+                if (vertices[i].CompareTo(vertices[i + 1]) == 0)
+                    continue;
+                lines.Add(new SegmentData { V1 = (uint)i, V2 = (uint)(i + 1) });
+            }
+            if (lines.Count == 0)
+                return;
+
+            // as-drawn pen color, falling back to the element line settings.
+            // copy the color since LineProperties is transient callback data
+            Color color;
+            if (lineProps != null
+                    && lineProps.Color != null
+                    && lineProps.Color.IsValid)
+                color = new Color(
+                    lineProps.Color.Red,
+                    lineProps.Color.Green,
+                    lineProps.Color.Blue
+                    );
+            else
+                color = GetElementLineColor();
+
+            // batch all segments of one color into a single part per element
+            string colorKey = color.GetId();
+            var newPrim = new PrimitiveData(vertices, lines);
+            if (_elementLineParts.TryGetValue(colorKey, out PartData linePart))
+                linePart.Primitive += newPrim;
+            else
+                _elementLineParts[colorKey] = new PartData(newPrim) {
+                    Color = color,
+                    Transparency = 0.0
+                };
+        }
+
+        Color GetElementLineColor() {
+            if (_currentElement is CurveElement curveElem
+                    && curveElem.LineStyle is GraphicsStyle style
+                    && style.GraphicsStyleCategory is Category styleCat
+                    && styleCat.LineColor != null
+                    && styleCat.LineColor.IsValid)
+                return styleCat.LineColor;
+
+            var category = _currentElement?.Category;
+            if (category != null
+                    && category.LineColor != null
+                    && category.LineColor.IsValid)
+                return category.LineColor;
+
+            return _cfgs.DefaultColor;
+        }
+
+        int? GetElementLineWeight(Element e) {
+            if (e is CurveElement curveElem
+                    && curveElem.LineStyle is GraphicsStyle style
+                    && style.GraphicsStyleCategory is Category styleCat)
+                return styleCat.GetLineWeight(GraphicsStyleType.Projection);
+
+            return e?.Category?.GetLineWeight(GraphicsStyleType.Projection);
+        }
+
         float[] LocalizePartStack() {
             List<float> vx = new List<float>();
             List<float> vy = new List<float>();
