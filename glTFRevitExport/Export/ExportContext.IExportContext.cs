@@ -191,6 +191,8 @@ namespace GLTFRevitExport.Export {
                 _currentElement = e;
                 // drop any stray line geometry collected outside an element scope
                 _elementLineParts.Clear();
+                _elementLineSegmentCount = 0;
+                _elementLineBudgetWarned = false;
 
                 // TODO: take a look at elements that have no type
                 // skipping these for now
@@ -296,13 +298,31 @@ namespace GLTFRevitExport.Export {
                 _elementLineParts.Clear();
             }
             else {
+                // project-scale CAD imports (DWG etc.): linework becomes
+                // spatial chunk child nodes streamed by area in the AR app,
+                // instead of primitives on the import's own node. Revit
+                // element linework (model lines, centerlines) and imports
+                // nested in families keep the per-element path below
+                bool chunkImportLines =
+                    _cfgs.ChunkImportLinework
+                    && _elementLineParts.Count > 0
+                    && _docStack.Peek() is Document chunkCheckDoc
+                    && chunkCheckDoc.GetElement(eid) is ImportInstance;
+
                 // merge line parts collected for this element into the part
                 // stack so they flow through bounds/localize/enqueue with
                 // the mesh parts
-                bool hasLineParts = _elementLineParts.Count > 0;
-                foreach (var linePart in _elementLineParts.Values)
-                    _partStack.Push(linePart);
-                _elementLineParts.Clear();
+                bool hasLineParts = false;
+                if (!chunkImportLines) {
+                    hasLineParts = _elementLineParts.Count > 0;
+                    foreach (var linePart in _elementLineParts.Values)
+                        _partStack.Push(linePart);
+                    _elementLineParts.Clear();
+                }
+
+                // the import node's matrix, needed to place chunk children
+                // relative to it when the import also carries solid meshes
+                float[] elementMatrix = null;
 
                 // if has mesh data
                 if (_partStack.Count > 0) {
@@ -314,6 +334,7 @@ namespace GLTFRevitExport.Export {
                             // transform bounds with existing transform
                             Logger.Log("> determine instance bounding box");
                             bounds = CalculateBounds(etAction.Matrix);
+                            elementMatrix = etAction.Matrix;
                             break;
 
                         // when element is a system family
@@ -323,6 +344,7 @@ namespace GLTFRevitExport.Export {
 
                             Logger.Log("> localized transform");
                             float[] xform = LocalizePartStack();
+                            elementMatrix = xform;
                             _actions.Enqueue(new ElementTransformAction(xform));
                             break;
                     }
@@ -359,6 +381,15 @@ namespace GLTFRevitExport.Export {
                             _actions.Enqueue(new PartFromDataAction(partData));
                     }
                 }
+
+                // emit chunk child nodes for import linework while the
+                // import's node is still the open scope (before the
+                // ElementEndAction below closes it)
+                if (chunkImportLines
+                        && _docStack.Peek() is Document importDoc
+                        && importDoc.GetElement(eid) is ImportInstance importInst)
+                    ChunkAndEnqueueImportLinework(importInst, elementMatrix);
+
                 _partStack.Clear();
 
                 // end the element

@@ -58,6 +58,53 @@ namespace GLTFRevitExport {
         public bool ExportLines { get; set; } = true;
 
         /// <summary>
+        /// Safety cap on thin-line segments collected per element. Oversized
+        /// linework is truncated with a warning. Zero or negative disables
+        /// the cap
+        /// </summary>
+        public int MaxLineSegmentsPerElement { get; set; } = 500000;
+
+        /// <summary>
+        /// Pool project-scale CAD import (DWG) linework into spatial chunk
+        /// nodes — one child node per occupied grid cell under the import's
+        /// own node — so the AR app can stream large drawings by area.
+        /// Revit element linework (model lines, MEP centerlines) always
+        /// keeps per-element nodes; CAD imports nested inside families flow
+        /// into the family element like any other family geometry
+        /// </summary>
+        public bool ChunkImportLinework { get; set; } = true;
+
+        /// <summary>
+        /// Horizontal (plan) size of a linework chunk cell, in meters
+        /// </summary>
+        public float LineChunkSizeHorizontal { get; set; } = 10f;
+
+        /// <summary>
+        /// Vertical size of a linework chunk cell, in meters. Shorter than
+        /// the horizontal size so each storey's linework chunks separately
+        /// </summary>
+        public float LineChunkSizeVertical { get; set; } = 4f;
+
+        /// <summary>
+        /// Target max segments per chunk node; an overflowing cell splits in
+        /// half per axis recursively (keeps per-node meshes near Unity's
+        /// 16-bit index boundary and mesh builds frame-friendly)
+        /// </summary>
+        public int MaxLineSegmentsPerNode { get; set; } = 50000;
+
+        /// <summary>
+        /// Write the export log to a timestamped file (works in release
+        /// builds; the Revit-side equivalent of the AR app's ArgyleLogs)
+        /// </summary>
+        public bool LogToFile { get; set; } = true;
+
+        /// <summary>
+        /// Directory for export log files. Null uses
+        /// %LOCALAPPDATA%\Argyle\ExportLogs
+        /// </summary>
+        public string LogDirectory { get; set; } = null;
+
+        /// <summary>
         /// Cancellation toke for cancelling the export progress
         /// </summary>
         public CancellationToken CancelToken;

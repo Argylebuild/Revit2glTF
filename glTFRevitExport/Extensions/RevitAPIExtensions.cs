@@ -12,12 +12,16 @@ namespace GLTFRevitExport.Extensions {
 
         public static string GetId(this Element e) => e?.UniqueId;
 
+        // Hex name in standard #RRGGBB order. (Historically emitted #RRBBGG —
+        // green/blue swapped in the NAME only; baseColorFactor was always
+        // correct via ToGLTF. The name doubles as the color-material dedup
+        // key, which stays consistent under either ordering.)
         public static string GetId(this Color c)
             => (
             "#"
             + c.Red.ToString("X2")
-            + c.Blue.ToString("X2")
             + c.Green.ToString("X2")
+            + c.Blue.ToString("X2")
             ).ToLower();
 
         public static bool Compare(this Color left, Color right)

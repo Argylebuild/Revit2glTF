@@ -189,6 +189,8 @@
     <Compile Include="Build\Actions\_ElementActions\ElementBoundsAction.cs" />
     <Compile Include="Build\Actions\_ElementActions\ElementLineWeightAction.cs" />
     <Compile Include="Build\Actions\_ElementActions\ElementTransformAction.cs" />
+    <Compile Include="Build\Actions\_ElementActions\LineChunkBeginAction.cs" />
+    <Compile Include="Build\Actions\_ElementActions\LineChunkEndAction.cs" />
     <Compile Include="Build\Actions\_LinkActions\LinkBeginAction.cs" />
     <Compile Include="Build\Actions\_LinkActions\LinkBoundsAction.cs" />
     <Compile Include="Build\Actions\_LinkActions\LinkEndAction.cs" />

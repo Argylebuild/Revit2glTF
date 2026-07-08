@@ -73,5 +73,17 @@ namespace GLTFRevitExport.Export {
         /// do not interfere with the OnMaterial/OnPolymesh mesh collection
         /// </summary>
         readonly Dictionary<string, PartData> _elementLineParts = new Dictionary<string, PartData>();
+
+        /// <summary>
+        /// Thin-line segments collected so far for the current element,
+        /// enforcing GLTFExportConfigs.MaxLineSegmentsPerElement
+        /// </summary>
+        int _elementLineSegmentCount = 0;
+
+        /// <summary>
+        /// Whether the segment-budget warning was already logged for the
+        /// current element (one warning per element, not per curve)
+        /// </summary>
+        bool _elementLineBudgetWarned = false;
     }
 }
