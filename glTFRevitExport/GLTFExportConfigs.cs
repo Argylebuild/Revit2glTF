@@ -52,6 +52,12 @@ namespace GLTFRevitExport {
         public bool ExportMaterials { get; set; } = false;
 
         /// <summary>
+        /// Export material base color textures (embedded as data URIs) and
+        /// per-vertex UVs. Only effective when ExportMaterials is true.
+        /// </summary>
+        public bool ExportTextures { get; set; } = false;
+
+        /// <summary>
         /// Cancellation toke for cancelling the export progress
         /// </summary>
         public CancellationToken CancelToken;

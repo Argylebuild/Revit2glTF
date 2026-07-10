@@ -47,6 +47,9 @@ namespace GLTFRevitExport.Export {
             _processed.Clear();
             _skipElement = false;
 
+            // per-export texture resolution cache
+            TextureUtils.ClearCache();
+
             var doc = _docStack.Last();
             _docStack.Clear();
             // place the root document on the stack
@@ -487,7 +490,6 @@ namespace GLTFRevitExport.Export {
         // Runs for every polymesh being processed. Typically this is a single
         // face of an element's mesh
         public void OnPolymesh(PolymeshTopology polymesh) {
-            // TODO: anything to do with .GetUV?
             if (_partStack.Count > 0) {
                 Logger.Log("> polymesh");
                 var activePart = _partStack.Peek();
@@ -504,6 +506,17 @@ namespace GLTFRevitExport.Export {
                 List<FacetData> facetDatas = polymeshFacets.Select(x => new FacetData(x)).ToList();
 
                 var newPrim = new PrimitiveData(vertices, facetDatas);
+
+                // Raw surface UVs — collected only when texture export is on
+                // and the part has a real material. Whether they are emitted
+                // (and scaled/flipped) is decided at build time, when the
+                // material's texture has actually resolved.
+                if (_cfgs.ExportTextures && _cfgs.ExportMaterials
+                        && activePart.Material != null) {
+                    var polymeshUVs = polymesh.GetUVs();
+                    if (polymeshUVs != null && polymeshUVs.Count == vertices.Count)
+                        newPrim.UVs = polymeshUVs.Select(uv => new UVData(uv.U, uv.V)).ToList();
+                }
 
                 if (activePart.HasPartData)
                     activePart.Primitive += newPrim;

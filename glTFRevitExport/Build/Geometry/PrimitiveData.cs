@@ -8,6 +8,12 @@ namespace GLTFRevitExport.Build.Geometry {
         public List<VectorData> Vertices { get; private set; }
         public List<FacetData> Faces { get; private set; }
 
+        /// <summary>
+        /// Raw per-vertex surface UVs (same count as Vertices), or null when
+        /// texture export is off or the source mesh had no UVs.
+        /// </summary>
+        public List<UVData> UVs { get; set; }
+
         public PrimitiveData(List<VectorData> vertices, List<FacetData> faces) {
             if (vertices is null || faces is null)
                 throw new Exception(StringLib.VertexFaceIsRequired);
@@ -27,7 +33,17 @@ namespace GLTFRevitExport.Build.Geometry {
             foreach (var faceIdx in right.Faces)
                 faces.Add(faceIdx + startIdx);
 
-            return new PrimitiveData(vertices, faces);
+            // UVs merge only when both sides fully cover their vertices;
+            // a partially-UVed mesh would corrupt vertex/UV pairing
+            List<UVData> uvs = null;
+            if (left.UVs != null && right.UVs != null
+                    && left.UVs.Count == left.Vertices.Count
+                    && right.UVs.Count == right.Vertices.Count) {
+                uvs = new List<UVData>(left.UVs);
+                uvs.AddRange(right.UVs);
+            }
+
+            return new PrimitiveData(vertices, faces) { UVs = uvs };
         }
     }
 }
