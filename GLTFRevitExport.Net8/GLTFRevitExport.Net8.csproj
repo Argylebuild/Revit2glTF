@@ -5,6 +5,7 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <RootNamespace>GLTFRevitExport</RootNamespace>
     <UseWPF>true</UseWPF>              <!-- only needed if XAML is present -->
+    <UseWindowsForms>true</UseWindowsForms> <!-- brings System.Drawing.Common for texture re-encoding -->
     <Nullable>enable</Nullable>
     <ImplicitUsings>false</ImplicitUsings>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>

@@ -166,6 +166,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System.Web" />
@@ -206,6 +207,7 @@
     <Compile Include="Build\Geometry\PartData.cs" />
     <Compile Include="Build\Geometry\PrimitiveData.cs" />
     <Compile Include="Build\Geometry\SegmentData.cs" />
+    <Compile Include="Build\Geometry\UVData.cs" />
     <Compile Include="Build\Geometry\VectorData.cs" />
     <Compile Include="Collector\Collector.cs" />
     <Compile Include="Export\ExportContext.Data.cs" />
@@ -229,6 +231,7 @@
       <DependentUpon>StringLib.resx</DependentUpon>
     </Compile>
     <Compile Include="Utils\GeometryUtils.cs" />
+    <Compile Include="Utils\TextureUtils.cs" />
     <Compile Include="Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
