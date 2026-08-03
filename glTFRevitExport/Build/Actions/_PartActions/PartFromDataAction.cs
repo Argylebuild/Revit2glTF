@@ -22,43 +22,99 @@ namespace GLTFRevitExport.Build.Actions {
         {
             if (_partData.HasPartData)
             {
-                Logger.Log("> primitive");
-
                 // make a new mesh and assign the new material
                 var vertices = new List<float>();
                 foreach (var vec in _partData.Primitive.Vertices)
                     vertices.AddRange(vec.ToArray());
 
-                var faces = new List<uint>();
-                foreach (var facet in _partData.Primitive.Faces)
-                    faces.AddRange(facet.ToArray());
-
-                var primIndex = ctx.Builder.AddPrimitive(
-                    vertices: vertices.ToArray(),
-                    normals: null,
-                    faces: faces.ToArray()
-                    );
-
-                Logger.Log("> material");
-
-                // if we are not exporting materials, use the default color
-                if (!ctx.Configs.ExportMaterials)
-                    UpdatePrimitiveMaterialByColor(ctx.Builder, primIndex, ctx.Configs.DefaultColor, 0.0d);
-
-                // if material information is not provided, make a material
-                // based on color and transparency
-                else if (_partData.Material is null)
+                if (_partData.Primitive.Faces.Count > 0)
                 {
-                    // make sure color is valid, otherwise it will throw
-                    // exception that color is not initialized
-                    Color color = _partData.Color.IsValid ? _partData.Color : ctx.Configs.DefaultColor;
-                    UpdatePrimitiveMaterialByColor(ctx.Builder, primIndex, color, _partData.Transparency);
+                    Logger.Log("> primitive");
+
+                    var faces = new List<uint>();
+                    foreach (var facet in _partData.Primitive.Faces)
+                        faces.AddRange(facet.ToArray());
+
+                    // resolve the texture BEFORE building the primitive — UVs are
+                    // only emitted when a texture actually resolved for the
+                    // material (a textured material without UVs, or UVs without a
+                    // texture, are both invalid shapes)
+                    TextureUtils.ResolvedTexture texture = null;
+                    if (ctx.Configs.ExportTextures
+                            && ctx.Configs.ExportMaterials
+                            && _partData.Material != null
+                            && _partData.Primitive.UVs != null
+                            && _partData.Primitive.UVs.Count == _partData.Primitive.Vertices.Count)
+                        texture = TextureUtils.ResolveTexture(_partData.Material);
+
+                    float[] uvs = null;
+                    if (texture != null) {
+                        // scale surface UVs by the texture's real-world repeat
+                        // size so tiling matches Revit's display, then flip V for
+                        // glTF's top-left texture origin
+                        uvs = new float[_partData.Primitive.UVs.Count * 2];
+                        int uvIdx = 0;
+                        foreach (var uv in _partData.Primitive.UVs) {
+                            uvs[uvIdx++] = (float)(uv.U / texture.ScaleU);
+                            uvs[uvIdx++] = (float)(1.0 - uv.V / texture.ScaleV);
+                        }
+                    }
+
+                    var primIndex = ctx.Builder.AddPrimitive(
+                        vertices: vertices.ToArray(),
+                        normals: null,
+                        uvs: uvs,
+                        faces: faces.ToArray()
+                        );
+
+                    uint? textureIdx = null;
+                    if (texture != null)
+                        textureIdx = ctx.Builder.AddTexture(texture.Bytes, texture.MimeType);
+
+                    AssignPrimitiveMaterial(ctx, primIndex, textureIdx);
                 }
 
-                // otherwise process the new material
-                else
-                    UpdatePrimitiveMaterialByMaterial(ctx.Builder, primIndex, _partData.Material, ctx);
+                // thin-line geometry rides the same vertex buffer as a LINES
+                // primitive; lines never carry textures
+                if (_partData.Primitive.Lines.Count > 0)
+                {
+                    Logger.Log("> line primitive");
+
+                    var lineIndices = new List<uint>();
+                    foreach (var segment in _partData.Primitive.Lines)
+                        lineIndices.AddRange(segment.ToArray());
+
+                    var primIndex = ctx.Builder.AddLinePrimitive(
+                        vertices: vertices.ToArray(),
+                        indices: lineIndices.ToArray()
+                        );
+
+                    AssignPrimitiveMaterial(ctx, primIndex);
+                }
             }
+        }
+
+        void AssignPrimitiveMaterial(BuildContext ctx, uint primIndex, uint? textureIdx = null)
+        {
+            Logger.Log("> material");
+
+            // if we are not exporting materials, use the default color
+            if (!ctx.Configs.ExportMaterials)
+                UpdatePrimitiveMaterialByColor(ctx.Builder, primIndex, ctx.Configs.DefaultColor, 0.0d);
+
+            // if material information is not provided, make a material
+            // based on color and transparency
+            else if (_partData.Material is null)
+            {
+                // make sure color is valid, otherwise it will throw
+                // exception that color is not initialized
+                Color color = _partData.Color.IsValid ? _partData.Color : ctx.Configs.DefaultColor;
+                UpdatePrimitiveMaterialByColor(ctx.Builder, primIndex, color, _partData.Transparency);
+            }
+
+            // otherwise process the new material
+            else
+                UpdatePrimitiveMaterialByMaterial(ctx.Builder, primIndex, _partData.Material, textureIdx, ctx);
         }
 
         void UpdatePrimitiveMaterialByColor(GLTFBuilder gltf, uint primIndex, Color color, double transparency) {
@@ -85,14 +141,18 @@ namespace GLTFRevitExport.Build.Actions {
             }
         }
 
-        void UpdatePrimitiveMaterialByMaterial(GLTFBuilder gltf, uint primIndex, Material material, BuildContext ctx) {
+        void UpdatePrimitiveMaterialByMaterial(GLTFBuilder gltf, uint primIndex, Material material, uint? textureIdx, BuildContext ctx) {
             var existingMaterialIndex =
                 gltf.FindMaterial(
                     (mat) => {
                         if (mat.Extensions != null) {
                             foreach (var ext in mat.Extensions)
                                 if (ext.Value is glTFRevitElementExt matExt)
-                                    return matExt.Id == material.UniqueId;
+                                    // texture presence must match: a prim
+                                    // without UVs must not bind a textured
+                                    // material (and vice versa)
+                                    return matExt.Id == material.UniqueId
+                                        && (mat.PBRMetallicRoughness?.BaseColorTexture != null) == textureIdx.HasValue;
                         }
                         return false;
                     }
@@ -107,10 +167,18 @@ namespace GLTFRevitExport.Build.Actions {
             }
             // otherwise make a new material and get its index
             else {
+                // textured materials get a white base color factor — the
+                // factor multiplies the texture, so the material's real color
+                // would tint the texture down
+                float[] color = textureIdx.HasValue
+                    ? new float[] { 1f, 1f, 1f, 1f }
+                    : material.Color.ToGLTF(material.Transparency / 128f);
+
                 gltf.AddMaterial(
                     primitiveIndex: primIndex,
                     name: material.Name,
-                    color: material.Color.ToGLTF(material.Transparency / 128f),
+                    color: color,
+                    textureIdx: textureIdx,
                     exts: new glTFExtension[] {
                         new glTFRevitElementExt(material, ctx)
                     },

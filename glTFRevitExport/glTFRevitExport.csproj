@@ -113,6 +113,24 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2025|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug2025\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;REVIT2025</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>11</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2026|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug2026\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;REVIT2026</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>11</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
   <ItemGroup Condition="$(Configuration.Contains('2021'))">
     <Reference Include="RevitAPI">
       <HintPath>..\..\..\..\..\.nuget\packages\revit_all_main_versions_api_x64\2021.0.0\lib\net48\RevitAPI.dll</HintPath>
@@ -148,6 +166,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System.Web" />
@@ -169,7 +188,10 @@
     <Compile Include="Build\Actions\_ElementActions\ElementEndAction.cs" />
     <Compile Include="Build\Actions\_ElementActions\ElementBeginAction.cs" />
     <Compile Include="Build\Actions\_ElementActions\ElementBoundsAction.cs" />
+    <Compile Include="Build\Actions\_ElementActions\ElementLineWeightAction.cs" />
     <Compile Include="Build\Actions\_ElementActions\ElementTransformAction.cs" />
+    <Compile Include="Build\Actions\_ElementActions\LineChunkBeginAction.cs" />
+    <Compile Include="Build\Actions\_ElementActions\LineChunkEndAction.cs" />
     <Compile Include="Build\Actions\_LinkActions\LinkBeginAction.cs" />
     <Compile Include="Build\Actions\_LinkActions\LinkBoundsAction.cs" />
     <Compile Include="Build\Actions\_LinkActions\LinkEndAction.cs" />
@@ -184,6 +206,8 @@
     <Compile Include="Build\Geometry\FacetData.cs" />
     <Compile Include="Build\Geometry\PartData.cs" />
     <Compile Include="Build\Geometry\PrimitiveData.cs" />
+    <Compile Include="Build\Geometry\SegmentData.cs" />
+    <Compile Include="Build\Geometry\UVData.cs" />
     <Compile Include="Build\Geometry\VectorData.cs" />
     <Compile Include="Collector\Collector.cs" />
     <Compile Include="Export\ExportContext.Data.cs" />
@@ -207,6 +231,7 @@
       <DependentUpon>StringLib.resx</DependentUpon>
     </Compile>
     <Compile Include="Utils\GeometryUtils.cs" />
+    <Compile Include="Utils\TextureUtils.cs" />
     <Compile Include="Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>

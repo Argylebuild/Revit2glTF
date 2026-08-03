@@ -60,5 +60,30 @@ namespace GLTFRevitExport.Export {
         readonly Stack<PartData> _partStack = new Stack<PartData>();
 
         readonly Stack<Transform> _transformStack = new Stack<Transform>();
+
+        /// <summary>
+        /// Element currently being processed, set at OnElementBegin.
+        /// Used as fallback context for line color and weight lookups
+        /// </summary>
+        Element _currentElement = null;
+
+        /// <summary>
+        /// Line geometry parts collected for the current element, keyed by
+        /// line color. Kept out of the part stack until OnElementEnd so they
+        /// do not interfere with the OnMaterial/OnPolymesh mesh collection
+        /// </summary>
+        readonly Dictionary<string, PartData> _elementLineParts = new Dictionary<string, PartData>();
+
+        /// <summary>
+        /// Thin-line segments collected so far for the current element,
+        /// enforcing GLTFExportConfigs.MaxLineSegmentsPerElement
+        /// </summary>
+        int _elementLineSegmentCount = 0;
+
+        /// <summary>
+        /// Whether the segment-budget warning was already logged for the
+        /// current element (one warning per element, not per curve)
+        /// </summary>
+        bool _elementLineBudgetWarned = false;
     }
 }

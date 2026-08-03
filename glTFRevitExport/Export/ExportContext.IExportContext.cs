@@ -46,6 +46,11 @@ namespace GLTFRevitExport.Export {
             // reset other stacks
             _processed.Clear();
             _skipElement = false;
+            _currentElement = null;
+            _elementLineParts.Clear();
+
+            // per-export texture resolution cache
+            TextureUtils.ClearCache();
 
             var doc = _docStack.Last();
             _docStack.Clear();
@@ -186,6 +191,11 @@ namespace GLTFRevitExport.Export {
         public RenderNodeAction OnElementBegin(ElementId eid) {
             if (_docStack.Peek() is Document doc) {
                 Element e = doc.GetElement(eid);
+                _currentElement = e;
+                // drop any stray line geometry collected outside an element scope
+                _elementLineParts.Clear();
+                _elementLineSegmentCount = 0;
+                _elementLineBudgetWarned = false;
 
                 // TODO: take a look at elements that have no type
                 // skipping these for now
@@ -193,8 +203,14 @@ namespace GLTFRevitExport.Export {
                 // DB.Opening
                 // DB.FaceSplitter
                 // DB.Spatial
-                if (!(doc.GetElement(e.GetTypeId()) is ElementType et))
-                    goto SkipElementLabel;
+                ElementType et = doc.GetElement(e.GetTypeId()) as ElementType;
+                if (et is null) {
+                    // curve elements (model lines/arcs) have no element type
+                    // but carry thin-line geometry; let them through with a
+                    // null type when exporting lines
+                    if (!(_cfgs.ExportLines && e is CurveElement))
+                        goto SkipElementLabel;
+                }
 
                 // TODO: fix inneficiency in getting linked elements multiple times
                 // this affects links that have multiple instances
@@ -279,9 +295,38 @@ namespace GLTFRevitExport.Export {
 
         // Runs at the end of an element being processed, after all other calls for that element.
         public void OnElementEnd(ElementId eid) {
-            if (_skipElement)
+            if (_skipElement) {
                 _skipElement = false;
+                // drop any line geometry collected for the skipped element
+                _elementLineParts.Clear();
+            }
             else {
+                // project-scale CAD imports (DWG etc.): linework becomes
+                // spatial chunk child nodes streamed by area in the AR app,
+                // instead of primitives on the import's own node. Revit
+                // element linework (model lines, centerlines) and imports
+                // nested in families keep the per-element path below
+                bool chunkImportLines =
+                    _cfgs.ChunkImportLinework
+                    && _elementLineParts.Count > 0
+                    && _docStack.Peek() is Document chunkCheckDoc
+                    && chunkCheckDoc.GetElement(eid) is ImportInstance;
+
+                // merge line parts collected for this element into the part
+                // stack so they flow through bounds/localize/enqueue with
+                // the mesh parts
+                bool hasLineParts = false;
+                if (!chunkImportLines) {
+                    hasLineParts = _elementLineParts.Count > 0;
+                    foreach (var linePart in _elementLineParts.Values)
+                        _partStack.Push(linePart);
+                    _elementLineParts.Clear();
+                }
+
+                // the import node's matrix, needed to place chunk children
+                // relative to it when the import also carries solid meshes
+                float[] elementMatrix = null;
+
                 // if has mesh data
                 if (_partStack.Count > 0) {
                     // calculate the bounding box from the parts data
@@ -292,6 +337,7 @@ namespace GLTFRevitExport.Export {
                             // transform bounds with existing transform
                             Logger.Log("> determine instance bounding box");
                             bounds = CalculateBounds(etAction.Matrix);
+                            elementMatrix = etAction.Matrix;
                             break;
 
                         // when element is a system family
@@ -301,17 +347,26 @@ namespace GLTFRevitExport.Export {
 
                             Logger.Log("> localized transform");
                             float[] xform = LocalizePartStack();
+                            elementMatrix = xform;
                             _actions.Enqueue(new ElementTransformAction(xform));
                             break;
                     }
 
                     _actions.Enqueue(new ElementBoundsAction(bounds));
 
+                    // record the dominant pen weight of the element's lines
+                    // on its node extension
+                    if (hasLineParts
+                            && _docStack.Peek() is Document lineDoc
+                            && GetElementLineWeight(lineDoc.GetElement(eid)) is int lineWeight)
+                        _actions.Enqueue(new ElementLineWeightAction(lineWeight));
+
                     // Preventing elements which have null lists of faces or vertices.
                     bool shouldSkip = false;
                     foreach (var pd in _partStack.Where(x => x.Primitive != null))
-                    {                        
-                        if (!pd.Primitive.Vertices.Any() || !pd.Primitive.Faces.Any())
+                    {
+                        if (!pd.Primitive.Vertices.Any()
+                            || (!pd.Primitive.Faces.Any() && !pd.Primitive.Lines.Any()))
                         {
                             shouldSkip = true;
                             if (_docStack.Peek() is Document document)
@@ -329,6 +384,15 @@ namespace GLTFRevitExport.Export {
                             _actions.Enqueue(new PartFromDataAction(partData));
                     }
                 }
+
+                // emit chunk child nodes for import linework while the
+                // import's node is still the open scope (before the
+                // ElementEndAction below closes it)
+                if (chunkImportLines
+                        && _docStack.Peek() is Document importDoc
+                        && importDoc.GetElement(eid) is ImportInstance importInst)
+                    ChunkAndEnqueueImportLinework(importInst, elementMatrix);
+
                 _partStack.Clear();
 
                 // end the element
@@ -487,7 +551,6 @@ namespace GLTFRevitExport.Export {
         // Runs for every polymesh being processed. Typically this is a single
         // face of an element's mesh
         public void OnPolymesh(PolymeshTopology polymesh) {
-            // TODO: anything to do with .GetUV?
             if (_partStack.Count > 0) {
                 Logger.Log("> polymesh");
                 var activePart = _partStack.Peek();
@@ -504,6 +567,17 @@ namespace GLTFRevitExport.Export {
                 List<FacetData> facetDatas = polymeshFacets.Select(x => new FacetData(x)).ToList();
 
                 var newPrim = new PrimitiveData(vertices, facetDatas);
+
+                // Raw surface UVs — collected only when texture export is on
+                // and the part has a real material. Whether they are emitted
+                // (and scaled/flipped) is decided at build time, when the
+                // material's texture has actually resolved.
+                if (_cfgs.ExportTextures && _cfgs.ExportMaterials
+                        && activePart.Material != null) {
+                    var polymeshUVs = polymesh.GetUVs();
+                    if (polymeshUVs != null && polymeshUVs.Count == vertices.Count)
+                        newPrim.UVs = polymeshUVs.Select(uv => new UVData(uv.U, uv.V)).ToList();
+                }
 
                 if (activePart.HasPartData)
                     activePart.Primitive += newPrim;
@@ -526,22 +600,41 @@ namespace GLTFRevitExport.Export {
             Logger.Log("> light");
         }
 
+        // Curves/polylines are delivered here because the exporter sets
+        // CustomExporter.IncludeGeometricObjects = true. The geometry is
+        // harvested directly and Skip is returned so Revit does not re-send
+        // it as tessellated line segments
         public RenderNodeAction OnCurve(CurveNode node) {
             Logger.Log("> curve");
+            if (_cfgs.ExportLines)
+                CollectLineGeometry(node.GetCurve().Tessellate(), node.LineProperties);
             return RenderNodeAction.Skip;
         }
 
         public RenderNodeAction OnPolyline(PolylineNode node) {
             Logger.Log("> polyline");
+            if (_cfgs.ExportLines)
+                CollectLineGeometry(node.GetPolyline().GetCoordinates(), node.LineProperties);
             return RenderNodeAction.Skip;
         }
 
+        // Called after an unhandled curve is tessellated to line segments.
+        // This is the delivery path for thin-line geometry (model curves,
+        // MEP centerlines at coarse/medium detail) while the exporter runs
+        // with CustomExporter.IncludeGeometricObjects = false
         public void OnLineSegment(LineSegment segment) {
             Logger.Log("> line segment");
+            if (_cfgs.ExportLines)
+                CollectLineGeometry(
+                    new List<XYZ> { segment.StartPoint, segment.EndPoint },
+                    segment.LineProperties
+                    );
         }
 
         public void OnPolylineSegments(PolylineSegments segments) {
-            Logger.Log("> polyline segment");
+            Logger.Log("> polyline segments");
+            if (_cfgs.ExportLines)
+                CollectLineGeometry(segments.GetVertices(), segments.LineProperties);
         }
 
         public void OnText(TextNode node) {

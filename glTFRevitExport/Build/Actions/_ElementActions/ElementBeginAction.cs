@@ -37,7 +37,8 @@ namespace GLTFRevitExport.Build.Actions {
             // create a node for its type
             // attemp at finding previously created node for this type
             // but only search children of already open node
-            if (ctx.Configs.ExportHierarchy) {
+            // (typeless elements, e.g. model curves, get no type node)
+            if (ctx.Configs.ExportHierarchy && _elementType != null) {
                 targetId = _elementType.GetId();
                 var typeNodeIdx = ctx.Builder.FindChildNode(nodeFilter);
 
