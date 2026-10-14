@@ -13,9 +13,16 @@ namespace GLTFRevitExport.Extensions {
         const float _eps = 1.0e-9f;
 
         /// <summary>
-        /// Conversion factor from feet to meter.
+        /// Conversion factor from feet to meter (float path, kept as-is so
+        /// the output of near-origin models is unchanged).
         /// </summary>
         const float _feet_to_m = 0.3048f;
+
+        /// <summary>
+        /// Conversion factor from feet to meter in double precision. The
+        /// international foot is exactly 0.3048 m
+        /// </summary>
+        public const double FeetToMeters = 0.3048;
 
         // 1/10 of a mm
         const short _resolution = 4;
@@ -35,6 +42,21 @@ namespace GLTFRevitExport.Extensions {
 
         public static float Round(this float number) {
             return Math.Round(Convert.ToDouble(number), _resolution).ToSingle();
+        }
+
+        /// <summary>
+        /// Convert double length value from feet to meter, staying in
+        /// double precision (no float32 cast)
+        /// </summary>
+        public static double ToGLTFLengthDouble(this double d)
+            => d * FeetToMeters;
+
+        /// <summary>
+        /// Round to the export resolution (1/10 mm) and cast to float32 —
+        /// the single point where double-precision geometry becomes float
+        /// </summary>
+        public static float RoundToSingle(this double d) {
+            return (float)Math.Round(d, _resolution);
         }
 
         // https://stackoverflow.com/a/3875619/2350244

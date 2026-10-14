@@ -28,10 +28,11 @@ namespace GLTFRevitExport.Build.Actions {
                 // add gltf-bim extension data
                 var gltfBim = new glTFRevitElementExt(grid, ctx);
 
-                // grab the two ends of the grid line as grid bounds
+                // grab the two ends of the grid line as grid bounds, rebased
+                // by the export origin in double before the float cast
                 gltfBim.Bounds = new glTFBIMBounds(
-                    gridLine.GetEndPoint(0).ToGLTFVector(),
-                    gridLine.GetEndPoint(1).ToGLTFVector()
+                    (gridLine.GetEndPoint(0) - ctx.OriginOffset).ToGLTFVector(),
+                    (gridLine.GetEndPoint(1) - ctx.OriginOffset).ToGLTFVector()
                 );
 
                 // create level node

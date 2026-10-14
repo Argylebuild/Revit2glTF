@@ -25,8 +25,9 @@ namespace GLTFRevitExport.Build.Actions {
 
             Level level = (Level)element;
 
-            // make a matrix from level elevation
-            float elev = level.ProjectElevation.ToGLTFLength();
+            // make a matrix from level elevation, rebased by the export
+            // origin in double before the float cast
+            float elev = (level.ProjectElevation - ctx.OriginOffset.Z).ToGLTFLength();
             float[] elevMatrix = null;
             // no matrix is specified for a level at elev 0
             if (elev != 0f) {
@@ -50,7 +51,7 @@ namespace GLTFRevitExport.Build.Actions {
 
             // set level bounds
             if (_extentsBbox != null) {
-                var bounds = _extentsBbox.TOGLTFBounds();
+                var bounds = _extentsBbox.TOGLTFBounds(ctx.OriginOffset);
                 glTFNode node = ctx.Builder.GetNode(levelNodeIdx);
                 if (node.Extensions != null) {
                     foreach (var ext in node.Extensions) {

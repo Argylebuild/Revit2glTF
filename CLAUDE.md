@@ -87,3 +87,15 @@ Nested submodule at `lib/glTF2BIM/`. Provides:
 - `GLTFPackageItem` hierarchy for serializing glTF output (model JSON, binary buffers, external files)
 
 Also has a `.Net8` variant at `lib/glTF2BIM/GLTF2BIM.Net8/`.
+
+---
+
+## Coordinate Precision and Origin Rebase
+
+Revit delivers geometry in internal coordinates (feet, Z-up) as doubles. Some customer models sit hundreds or thousands of kilometers from the internal origin (survey coordinates baked into the internal frame). At that magnitude float32 only resolves 6–12 cm, so any cast to float before localizing snaps every vertex to that grid and no later step can recover it (project 1821, 2026-10). Rules:
+
+- `VectorData` holds **doubles**. The only double→float casts are `VectorData.ToArray()` (buffer write, 1/10 mm rounding) and the node-matrix translations built in `LocalizePartStack` / `EmitLineChunk`, which are small by then.
+- **Export origin** (`ExportContext._originOffset`, chosen once per session in `SetExportOriginOffset` at the first `OnViewBegin`): per-axis median of the visible elements' bounding-box centers, snapped to a 1 km grid, applied only when the content center is more than 10 km from the internal origin (`RebaseThresholdMeters`, `OriginGridMeters` — same values as the Navisworks exporter). Near-origin models export exactly as before (no `originOffset`), which protects saved AR alignments.
+- The origin is applied as the **base of the transform stack** (`BaseTransform`), so polymesh points, line geometry, instance and link geometry are rebased in double automatically. Build actions that convert absolute Revit coordinates themselves must subtract `ctx.OriginOffset` first: `LevelAction` (elevation, extents), `GridAction` (endpoints), `PartFromElementAction` (topography meshes). Add any new such path to this list.
+- Published as `EXT_bim_metadata.originOffset` (glTF space `(x, z, -y) · 0.3048`, `double[3]`) on every file's asset extension via `BuildContext.OriginOffset`. The AR app clusters origins within 10 km and composes `originOffset − reference` in double, so rebased Revit and Navisworks exports of one site stay aligned.
+- **Link bounds:** link geometry is collected in **host** coordinates (`OnLinkBegin` pushes the link transform onto the stack), so `LinkHostBounds` is a copy of the element bounds. Never re-apply the link matrix. The link node's `matrix` in the host file is informational; consumers must not apply it to the linked file's content.
