@@ -2,7 +2,10 @@
 
   <!-- ================ core settings ================ -->
   <PropertyGroup>
+    <!-- Revit 2025/2026 run on .NET 8 and Revit 2027+ on .NET 10. The target framework follows the
+         configuration name, so this one project builds every SDK-style Revit year. -->
     <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework Condition="$(Configuration.Contains('2027'))">net10.0-windows</TargetFramework>
     <RootNamespace>GLTFRevitExport</RootNamespace>
     <UseWPF>true</UseWPF>              <!-- only needed if XAML is present -->
     <UseWindowsForms>true</UseWindowsForms> <!-- brings System.Drawing.Common for texture re-encoding -->
@@ -11,7 +14,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AssemblyName>Argyle.glTFRevitExport</AssemblyName>
     <Platforms>AnyCPU;x64</Platforms>
-    <Configurations>Debug;Release;Release2025;Release2026;Debug2025;Debug2026</Configurations>
+    <Configurations>Debug;Release;Release2025;Release2026;Release2027;Debug2025;Debug2026;Debug2027</Configurations>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
@@ -43,12 +46,28 @@
     <DefineConstants>REVIT;REVIT2026</DefineConstants>
     <Optimize>true</Optimize>
   </PropertyGroup>
+  <!-- ================ 2027 build configuration (.NET 10) ================ -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug2027|x64'">
+    <OutputPath>..\build\Release2027\</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants>REVIT;REVIT2027</DefineConstants>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2027|x64'">
+    <OutputPath>..\build\Release2027\</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants>REVIT;REVIT2027</DefineConstants>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
 
     <PropertyGroup Condition="$(Configuration.Contains('2025'))">
       <RevitVersion>2025</RevitVersion>
     </PropertyGroup>
     <PropertyGroup Condition="$(Configuration.Contains('2026'))">
       <RevitVersion>2026</RevitVersion>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(Configuration.Contains('2027'))">
+      <RevitVersion>2027</RevitVersion>
     </PropertyGroup>
 
   <!-- ================ source sharing ================ -->

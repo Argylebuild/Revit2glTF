@@ -112,11 +112,7 @@ namespace GLTFRevitExport.Extensions {
 
 					case StorageType.Integer:
 
-#if REVIT2021
-						if (param.Definition.ParameterType == ParameterType.YesNo)
-#else
 						if (param.Definition.GetDataType().TypeId.StartsWith("autodesk.spec:spec.bool"))
-#endif
 							value = param.AsInteger() != 0;
 						else
 							value = param.AsInteger();

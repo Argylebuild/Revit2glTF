@@ -9,7 +9,7 @@ Forked from an open-source Revit-to-glTF exporter ([Revit2glTF](https://github.c
 ## Structure
 
 ```
-├── glTFRevitExport/              .NET Framework 4.8 project (Revit 2021–2024)
+├── glTFRevitExport/              .NET Framework 4.8 project (Revit 2024)
 │   ├── GLTFExporter.cs           Public entry point — creates export context, exports views
 │   ├── GLTFExportConfigs.cs      Configuration: hierarchy, links, params, materials, etc.
 │   ├── Export/                   Revit CustomExporter (IExportContext) implementation
@@ -25,7 +25,8 @@ Forked from an open-source Revit-to-glTF exporter ([Revit2glTF](https://github.c
 │   ├── Collector/                Revit element collection utilities
 │   ├── Extensions/               Extension methods (Revit API, numbers, strings)
 │   └── Utils/                    Geometry and general utilities
-├── GLTFRevitExport.Net8/         .NET 8 wrapper (same pattern as Argyle.RevitNet8)
+├── GLTFRevitExport.Net8/         SDK-style wrapper for Revit 2025–2027 (same pattern as Argyle.RevitNet8;
+│                                 net8.0-windows for 2025–2026, net10.0-windows for 2027)
 └── lib/
     └── glTF2BIM/                 glTF schema types and package model (nested submodule)
 ```
@@ -35,8 +36,8 @@ Forked from an open-source Revit-to-glTF exporter ([Revit2glTF](https://github.c
 ## Dual-Project Pattern
 
 Same approach as the main plugin:
-- `glTFRevitExport/` — .NET Framework 4.8 project with explicit `<Compile>` items
-- `GLTFRevitExport.Net8/` — SDK-style .NET 8 project that compiles `glTFRevitExport/**/*.cs` via glob
+- `glTFRevitExport/` — .NET Framework 4.8 project with explicit `<Compile>` items (Revit 2024 only; 2021–2023 were dropped in 2026-10)
+- `GLTFRevitExport.Net8/` — SDK-style project that compiles `glTFRevitExport/**/*.cs` via glob. The target framework follows the configuration: `*2025`/`*2026` → `net8.0-windows`, `*2027` → `net10.0-windows`. `lib/glTF2BIM/GLTF2BIM.Net8/` follows the same rule (`net8.0` / `net10.0`). Add a new Revit year to `Configurations`, its property groups and `RevitVersion` group in both projects.
 
 **Edit source files in `glTFRevitExport/` only.**
 

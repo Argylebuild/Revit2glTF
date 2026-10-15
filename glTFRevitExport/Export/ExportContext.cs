@@ -15,11 +15,7 @@ using GLTFRevitExport.Build.Actions.BaseTypes;
 using GLTFRevitExport.GLTF.Extensions.BIM.Revit;
 
 namespace GLTFRevitExport.Export {
-#if REVIT2019
-    sealed partial class ExportContext : IExportContext, IModelExportContext {
-#else
     sealed partial class ExportContext : IExportContext, IExportContextBase, IModelExportContext {
-#endif
         public ExportContext(Document doc, GLTFExportConfigs exportConfigs = null) {
             // ensure base configs
             _cfgs = exportConfigs is null ? new GLTFExportConfigs() : exportConfigs;

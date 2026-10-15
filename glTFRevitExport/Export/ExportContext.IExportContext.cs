@@ -17,11 +17,7 @@ using Grid = Autodesk.Revit.DB.Grid;
 using Material = Autodesk.Revit.DB.Material;
 
 namespace GLTFRevitExport.Export {
-#if REVIT2019
-    sealed partial class ExportContext : IExportContext, IModelExportContext {
-#else
     sealed partial class ExportContext : IExportContext, IExportContextBase, IModelExportContext {
-#endif
         public List<Element> NonExportedElements { get; set; } = new List<Element>();
         public static Element Element { get; set; } = null;
         private Transform CurrentTransform
