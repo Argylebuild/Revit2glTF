@@ -31,9 +31,11 @@ namespace GLTFRevitExport.Build.Actions {
                         extras: ctx.Configs.BuildExtras(element)
                         );
 
+                    // mesh vertices are absolute Revit coordinates: rebase by
+                    // the export origin in double before the float cast
                     var vertices = new List<float>();
                     foreach (var vec in mesh.Vertices)
-                        vertices.AddRange(vec.ToGLTF());
+                        vertices.AddRange((vec - ctx.OriginOffset).ToGLTF());
 
                     var faces = new List<uint>();
                     for (int i = 0; i < mesh.NumTriangles; i++) {

@@ -49,6 +49,17 @@ namespace GLTFRevitExport.Extensions {
         }
 
         /// <summary>
+        /// Revit point (internal coordinates, feet, Z-up) to glTF space
+        /// (meters, Y-up) in double precision: glTF = (x, z, -y) · 0.3048.
+        /// Use this for anything that may carry survey-scale coordinates and
+        /// cast to float only after rebasing / localizing
+        /// </summary>
+        public static double[] ToGLTFDouble(this XYZ vector) {
+            var np = ZTOY.OfPoint(vector);
+            return new double[] { np.X.ToGLTFLengthDouble(), np.Y.ToGLTFLengthDouble(), np.Z.ToGLTFLengthDouble() };
+        }
+
+        /// <summary>
         /// Convert Revit transform to floating-point 4x4 transformation
         /// matrix stored in column major order
         /// </summary>
@@ -101,11 +112,7 @@ namespace GLTFRevitExport.Extensions {
 
 					case StorageType.Integer:
 
-#if REVIT2021
-						if (param.Definition.ParameterType == ParameterType.YesNo)
-#else
 						if (param.Definition.GetDataType().TypeId.StartsWith("autodesk.spec:spec.bool"))
-#endif
 							value = param.AsInteger() != 0;
 						else
 							value = param.AsInteger();
@@ -183,10 +190,22 @@ namespace GLTFRevitExport.Extensions {
 
 
 
-		public static glTFBIMBounds TOGLTFBounds(this BoundingBoxXYZ bbox) {
+		public static glTFBIMBounds TOGLTFBounds(this BoundingBoxXYZ bbox)
+            => bbox.TOGLTFBounds(XYZ.Zero);
+
+        /// <summary>
+        /// Bounding box to glTF bounds, rebased by the export origin (Revit
+        /// internal coordinates) in double precision before the float cast.
+        /// Corners are re-paired per axis after the conversion: the Z-up to
+        /// Y-up basis change negates one axis, so the converted "min" corner
+        /// is not the minimum on that axis
+        /// </summary>
+        public static glTFBIMBounds TOGLTFBounds(this BoundingBoxXYZ bbox, XYZ originOffset) {
+            var a = (bbox.Min - originOffset).ToGLTFDouble();
+            var b = (bbox.Max - originOffset).ToGLTFDouble();
             return new glTFBIMBounds(
-                min: bbox.Min.ToGLTFVector(),
-                max: bbox.Max.ToGLTFVector()
+                (float)Math.Min(a[0], b[0]), (float)Math.Min(a[1], b[1]), (float)Math.Min(a[2], b[2]),
+                (float)Math.Max(a[0], b[0]), (float)Math.Max(a[1], b[1]), (float)Math.Max(a[2], b[2])
                 );
         }
 

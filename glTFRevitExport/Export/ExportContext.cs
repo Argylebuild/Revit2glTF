@@ -15,11 +15,7 @@ using GLTFRevitExport.Build.Actions.BaseTypes;
 using GLTFRevitExport.GLTF.Extensions.BIM.Revit;
 
 namespace GLTFRevitExport.Export {
-#if REVIT2019
-    sealed partial class ExportContext : IExportContext, IModelExportContext {
-#else
     sealed partial class ExportContext : IExportContext, IExportContextBase, IModelExportContext {
-#endif
         public ExportContext(Document doc, GLTFExportConfigs exportConfigs = null) {
             // ensure base configs
             _cfgs = exportConfigs is null ? new GLTFExportConfigs() : exportConfigs;
@@ -35,7 +31,7 @@ namespace GLTFRevitExport.Export {
             var doc = _docStack.Last();
 
             // create main gltf builder
-            var mainCtx = new BuildContext("model", doc, _cfgs);
+            var mainCtx = new BuildContext("model", doc, _cfgs, _originOffset);
             var buildContexts = new List<BuildContext> { mainCtx };
 
             // combine default filter with build filter
@@ -146,7 +142,8 @@ namespace GLTFRevitExport.Export {
                         activeLinkCtx = new BuildContext(
                             name: linkBeg.LinkId,
                             doc: linkBeg.LinkDocument,
-                            cfgs: _cfgs
+                            cfgs: _cfgs,
+                            originOffset: _originOffset
                         );
 
                         activeLinkCtx.Builder.OpenScene(
@@ -215,6 +212,9 @@ namespace GLTFRevitExport.Export {
             _skipElement = false;
             _currentElement = null;
             _elementLineParts.Clear();
+            _linkDepth = 0;
+            _originOffset = XYZ.Zero;
+            _originOffsetSet = false;
         }
     }
 }

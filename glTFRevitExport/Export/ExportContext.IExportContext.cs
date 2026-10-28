@@ -17,11 +17,7 @@ using Grid = Autodesk.Revit.DB.Grid;
 using Material = Autodesk.Revit.DB.Material;
 
 namespace GLTFRevitExport.Export {
-#if REVIT2019
-    sealed partial class ExportContext : IExportContext, IModelExportContext {
-#else
     sealed partial class ExportContext : IExportContext, IExportContextBase, IModelExportContext {
-#endif
         public List<Element> NonExportedElements { get; set; } = new List<Element>();
         public static Element Element { get; set; } = null;
         private Transform CurrentTransform
@@ -37,7 +33,12 @@ namespace GLTFRevitExport.Export {
         // and scene.
         public bool Start() {
 
-            _transformStack.Push(Transform.Identity);
+            // base of the transform stack rebases every collected point by
+            // the export origin (identity until the origin is chosen at the
+            // first OnViewBegin). Start runs once per exported view; reset
+            // the stack so the base does not accumulate
+            _transformStack.Clear();
+            _transformStack.Push(BaseTransform);
 
             // Do not need to do anything here
             // _glTF is already instantiated
@@ -85,6 +86,15 @@ namespace GLTFRevitExport.Export {
                 if (doc.GetElement(node.ViewId) is View view) {
                     if (RecordOrSkip(view, "x duplicate view", setFlag: true))
                         return RenderNodeAction.Skip;
+
+                    // one origin for the whole export session (all views and
+                    // all linked files share the host's coordinate space),
+                    // chosen before any geometry is collected
+                    if (!_originOffsetSet) {
+                        SetExportOriginOffset(doc, view);
+                        _transformStack.Clear();
+                        _transformStack.Push(BaseTransform);
+                    }
 
                     // if active doc and view is valid
                     _actions.Enqueue(new SceneBeginAction(view: view));
@@ -450,8 +460,7 @@ namespace GLTFRevitExport.Export {
                     Logger.Log("+ link document begin");
                     _docStack.Push(node.GetDocument());
 
-                    Logger.Log("> link matrix");
-                    _linkMatrix = node.GetTransform().ToGLTF();
+                    _linkDepth++;
 
                     return RenderNodeAction.Proceed;
                 }
@@ -467,8 +476,14 @@ namespace GLTFRevitExport.Export {
             else {
                 if (_cfgs.ExportLinkedModels) {
 
+                    // placement of this link's content in rebased host
+                    // coordinates (the current stack transform: export origin ·
+                    // enclosing links · this link; origin subtracted in double
+                    // before the float cast). Informational only: the linked
+                    // file's geometry is already collected in host coordinates
+                    // (see OnLinkBegin), so consumers must not apply it again
                     Logger.Log("> transform (link)");
-                    float[] matrix = node.GetTransform().ToGLTF();
+                    float[] matrix = CurrentTransform.ToGLTF();
                     _actions.Enqueue(new LinkTransformAction(matrix));
 
                     if (!_cfgs.EmbedLinkedModels)
@@ -476,7 +491,7 @@ namespace GLTFRevitExport.Export {
 
                     Logger.Log("- link document end");
                     _docStack.Pop();
-                    _linkMatrix = null;
+                    _linkDepth = Math.Max(0, _linkDepth - 1);
                 }
             }
 

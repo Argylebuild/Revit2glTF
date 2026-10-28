@@ -9,6 +9,7 @@ using GLTF2BIM.GLTF.Package;
 using GLTF2BIM.GLTF.Package.BaseTypes;
 using GLTF2BIM.GLTF.Extensions.BIM.Containers;
 
+using GLTFRevitExport.Extensions;
 using GLTFRevitExport.GLTF.Extensions.BIM.Revit;
 
 namespace GLTFRevitExport.Build {
@@ -18,10 +19,20 @@ namespace GLTFRevitExport.Build {
         public glTFRevitDocumentExt AssetExtension { get; }
         public glTFBIMPropertyContainer PropertyContainer { get; }
 
-        public BuildContext(string name, Document doc, GLTFExportConfigs cfgs) {
+        /// <summary>
+        /// Export origin in Revit internal coordinates (feet, Z-up) that the
+        /// collected geometry was rebased by. Build actions that convert
+        /// absolute Revit coordinates themselves (levels, grids, element
+        /// meshes) must subtract it before casting to float. XYZ.Zero when
+        /// the export is not rebased
+        /// </summary>
+        public XYZ OriginOffset { get; }
+
+        public BuildContext(string name, Document doc, GLTFExportConfigs cfgs, XYZ originOffset) {
             // create main gltf builder
             Builder = new GLTFBuilder(name);
             Configs = cfgs;
+            OriginOffset = originOffset ?? XYZ.Zero;
 
             // build asset extension and property source (if needed)
             if (cfgs.EmbedParameters)
@@ -30,6 +41,12 @@ namespace GLTFRevitExport.Build {
                 PropertyContainer = new glTFBIMPropertyContainer($"{name}-properties.json");
                 AssetExtension = new glTFRevitDocumentExt(doc, this);
             }
+
+            // publish the origin (glTF space, double) so consumers can
+            // reconstruct absolute coordinates; omitted (null) for
+            // non-rebased exports so their output is unchanged
+            AssetExtension.OriginOffset =
+                OriginOffset.IsZeroLength() ? null : OriginOffset.ToGLTFDouble();
 
             Builder.SetAsset(
                 generatorId: cfgs.GeneratorId,

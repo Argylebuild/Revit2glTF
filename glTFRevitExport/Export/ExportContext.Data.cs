@@ -11,11 +11,7 @@ using GLTFRevitExport.Build.Actions.BaseTypes;
 using GLTFRevitExport.Build.Geometry;
 
 namespace GLTFRevitExport.Export {
-#if REVIT2019
-    sealed partial class ExportContext : IExportContext, IModelExportContext {
-#else
     sealed partial class ExportContext : IExportContext, IExportContextBase, IModelExportContext {
-#endif
         /// <summary>
         /// Configurations for the active export
         /// </summary>
@@ -28,9 +24,28 @@ namespace GLTFRevitExport.Export {
         readonly Stack<Document> _docStack = new Stack<Document>();
 
         /// <summary>
-        /// Transform of the embedded document
+        /// Nesting depth of linked documents being collected (0 = host).
+        /// Link geometry is collected in HOST coordinates — OnLinkBegin
+        /// pushes the link transform onto the transform stack — so element
+        /// bounds computed inside a link are already host-space bounds
         /// </summary>
-        float[] _linkMatrix = null;
+        int _linkDepth = 0;
+
+        /// <summary>
+        /// Export origin in Revit internal coordinates (feet, Z-up),
+        /// subtracted in double precision from every point, placement and
+        /// bounds value before it is cast to float32. Zero (no rebase) for
+        /// content near the internal origin, so such exports are unchanged.
+        /// Chosen once per export session — see SetExportOriginOffset — and
+        /// published as EXT_bim_metadata "originOffset" (glTF space) so
+        /// consumers can reconstruct absolute coordinates in double
+        /// </summary>
+        XYZ _originOffset = XYZ.Zero;
+
+        /// <summary>
+        /// Whether the export origin has been chosen for this session
+        /// </summary>
+        bool _originOffsetSet = false;
 
         /// <summary>
         /// View stack to hold the view being processed.

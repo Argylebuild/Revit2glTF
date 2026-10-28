@@ -16,11 +16,7 @@ using GLTFRevitExport.Build.Geometry;
 using GLTFRevitExport.GLTF.Extensions.BIM.Revit;
 
 namespace GLTFRevitExport.Export {
-#if REVIT2019
-    sealed partial class ExportContext : IExportContext, IModelExportContext {
-#else
     sealed partial class ExportContext : IExportContext, IExportContextBase, IModelExportContext {
-#endif
         bool RecordOrSkip(Element e, string skipMessage, bool setFlag = false) {
             bool skip = false;
             if (e is null) {
@@ -44,9 +40,11 @@ namespace GLTFRevitExport.Export {
 
         glTFBIMBounds CalculateBoundsOf(IEnumerable<PartData> parts, float[] matrix = null) {
 
+            // min/max accumulate in double (vertices are double) and are
+            // cast to float once, at the end
             glTFBIMBounds CalculateMeshBounds(Transform xform) {
-                float minx, miny, minz, maxx, maxy, maxz;
-                minx = miny = minz = maxx = maxy = maxz = float.NaN;
+                double minx, miny, minz, maxx, maxy, maxz;
+                minx = miny = minz = maxx = maxy = maxz = double.NaN;
 
                 foreach (var partData in parts)
                 {
@@ -58,19 +56,19 @@ namespace GLTFRevitExport.Export {
                             if (xform is Transform)
                                 vtx = vtx.Transform(xform);
 
-                            minx = minx is float.NaN || vtx.X < minx ? vtx.X : minx;
-                            miny = miny is float.NaN || vtx.Y < miny ? vtx.Y : miny;
-                            minz = minz is float.NaN || vtx.Z < minz ? vtx.Z : minz;
-                            maxx = maxx is float.NaN || vtx.X > maxx ? vtx.X : maxx;
-                            maxy = maxy is float.NaN || vtx.Y > maxy ? vtx.Y : maxy;
-                            maxz = maxz is float.NaN || vtx.Z > maxz ? vtx.Z : maxz;
+                            minx = double.IsNaN(minx) || vtx.X < minx ? vtx.X : minx;
+                            miny = double.IsNaN(miny) || vtx.Y < miny ? vtx.Y : miny;
+                            minz = double.IsNaN(minz) || vtx.Z < minz ? vtx.Z : minz;
+                            maxx = double.IsNaN(maxx) || vtx.X > maxx ? vtx.X : maxx;
+                            maxy = double.IsNaN(maxy) || vtx.Y > maxy ? vtx.Y : maxy;
+                            maxz = double.IsNaN(maxz) || vtx.Z > maxz ? vtx.Z : maxz;
                         }
                     }
                 }
 
                 return new glTFBIMBounds(
-                    minx, miny, minz,
-                    maxx, maxy, maxz
+                    (float)minx, (float)miny, (float)minz,
+                    (float)maxx, (float)maxy, (float)maxz
                 );
             };
 
@@ -78,25 +76,18 @@ namespace GLTFRevitExport.Export {
             if (matrix != null)
                 mxform = matrix.FromGLTFMatrix();
 
-            // if link matrix is available we are processing mesh in a link
-            // therefore .LinkHostBounds must be set on the calculated bounds
-            glTFBIMBounds linkHostBounds = null;
-            if (_linkMatrix != null) {
-                var lxform = _linkMatrix.FromGLTFMatrix();
-                if (mxform != null)
-                    lxform = lxform.Multiply(mxform);
-                linkHostBounds = CalculateMeshBounds(lxform);
-                if (_cfgs.EmbedLinkedModels)
-                    return linkHostBounds;
-            }
+            glTFBIMBounds finalBounds = CalculateMeshBounds(mxform);
 
-            glTFBIMBounds finalBounds;
-            if (mxform != null)
-                finalBounds = CalculateMeshBounds(mxform);
-            else
-                finalBounds = CalculateMeshBounds(null);
+            // Inside a linked document the vertices are already in host
+            // coordinates (OnLinkBegin pushes the link transform onto the
+            // transform stack), so the host-space bounds the main file needs
+            // for the link node ARE these bounds. They used to be transformed
+            // by the link matrix a second time, which put every link's
+            // declared bounds — and the root asset bounds — millions of
+            // meters off on far-from-origin models
+            if (_linkDepth > 0)
+                finalBounds.LinkHostBounds = new glTFBIMBounds(finalBounds);
 
-            finalBounds.LinkHostBounds = linkHostBounds;
             return finalBounds;
         }
 
@@ -201,9 +192,12 @@ namespace GLTFRevitExport.Export {
         }
 
         float[] LocalizePartStack() {
-            List<float> vx = new List<float>();
-            List<float> vy = new List<float>();
-            List<float> vz = new List<float>();
+            // the anchor and the shifted vertices are computed in double;
+            // only the node matrix translation is cast to float, and by then
+            // it is small (vertices were rebased by the export origin)
+            double minx, miny, minz, maxx, maxy, maxz;
+            minx = miny = minz = double.MaxValue;
+            maxx = maxy = maxz = double.MinValue;
 
             foreach (var partData in _partStack)
             {
@@ -211,18 +205,18 @@ namespace GLTFRevitExport.Export {
                 {
                     foreach (var vtx in partData.Primitive.Vertices)
                     {
-                        vx.Add(vtx.X);
-                        vy.Add(vtx.Y);
-                        vz.Add(vtx.Z);
+                        minx = vtx.X < minx ? vtx.X : minx;
+                        miny = vtx.Y < miny ? vtx.Y : miny;
+                        minz = vtx.Z < minz ? vtx.Z : minz;
+                        maxx = vtx.X > maxx ? vtx.X : maxx;
+                        maxy = vtx.Y > maxy ? vtx.Y : maxy;
+                        maxz = vtx.Z > maxz ? vtx.Z : maxz;
                     }
                 }
-
             }
 
-            var min = new VectorData(vx.Min(), vy.Min(), vz.Min());
-            var max = new VectorData(vx.Max(), vy.Max(), vz.Max());
-            var anchor = min + ((max - min) / 2f);
-            var translate = new VectorData(0, 0, 0) - anchor;
+            var anchor = new VectorData(
+                (minx + maxx) / 2.0, (miny + maxy) / 2.0, (minz + maxz) / 2.0);
 
             foreach (var partData in _partStack)
             {
@@ -230,20 +224,131 @@ namespace GLTFRevitExport.Export {
                 {
                     foreach (var vtx in partData.Primitive.Vertices)
                     {
-                        vtx.X += translate.X;
-                        vtx.Y += translate.Y;
-                        vtx.Z += translate.Z;
+                        vtx.X -= anchor.X;
+                        vtx.Y -= anchor.Y;
+                        vtx.Z -= anchor.Z;
                     }
                 }
             }
 
             return new float[16] {
-                1f,             0f,             0f,             0f,
-                0f,             1f,             0f,             0f,
-                0f,             0f,             1f,             0f,
-                -translate.X,   -translate.Y,   -translate.Z,    1f
+                1f,                 0f,                 0f,                 0f,
+                0f,                 1f,                 0f,                 0f,
+                0f,                 0f,                 1f,                 0f,
+                (float)anchor.X,    (float)anchor.Y,    (float)anchor.Z,    1f
             };
         }
+
+        #region Export origin (position-scramble fix)
+
+        /// <summary>
+        /// Beyond this distance from the Revit internal origin (in meters)
+        /// float32 can no longer hold a coordinate to ~1 mm: it resolves 6 cm
+        /// at 700 km and 12 cm at 2000 km, and every vertex of a model that
+        /// far out snaps to that grid (the "position scramble"). Content
+        /// centered inside the threshold is exported exactly as before — no
+        /// rebase, no originOffset — so existing projects and their saved AR
+        /// alignments are untouched. Same value as the Navisworks exporter so
+        /// both make the same decision for the same site
+        /// </summary>
+        const double RebaseThresholdMeters = 10000;
+
+        /// <summary>
+        /// Origin components snap to this grid (in meters). Coarse rounding
+        /// keeps the origin stable across re-exports and sibling models of
+        /// one site (content centers drift by meters, not kilometers); the
+        /// AR app clusters origins within 10 km and composes the exact
+        /// difference in double, so models of a site stay mutually aligned
+        /// </summary>
+        const double OriginGridMeters = 1000;
+
+        /// <summary>
+        /// Translation by the negated export origin: the base of the
+        /// transform stack, so every point delivered by Revit is rebased in
+        /// double precision before it is converted to glTF space
+        /// </summary>
+        Transform BaseTransform => Transform.CreateTranslation(_originOffset.Negate());
+
+        /// <summary>
+        /// Picks the export origin for this session from the content of the
+        /// first exported view: the per-axis median of the visible elements'
+        /// bounding-box centers (robust against a stray element far from the
+        /// site, e.g. a title block at 0,0 inside a site DWG, which would drag
+        /// a plain bounds center hundreds of km off), snapped to
+        /// OriginGridMeters — but only when the content sits farther than
+        /// RebaseThresholdMeters from the internal origin. Linked models
+        /// count as one element each (their bounding box is in host space)
+        /// </summary>
+        void SetExportOriginOffset(Document doc, View view) {
+            _originOffsetSet = true;
+            _originOffset = XYZ.Zero;
+
+            var xs = new List<double>();
+            var ys = new List<double>();
+            var zs = new List<double>();
+            try {
+                foreach (var e in new FilteredElementCollector(doc, view.Id)
+                                      .WhereElementIsNotElementType()) {
+                    BoundingBoxXYZ bbox = null;
+                    try { bbox = e.get_BoundingBox(view); }
+                    catch { continue; }
+                    if (bbox is null || bbox.Min is null || bbox.Max is null)
+                        continue;
+
+                    var center = bbox.Transform.OfPoint((bbox.Min + bbox.Max) / 2.0);
+                    if (!IsFinite(center.X) || !IsFinite(center.Y) || !IsFinite(center.Z))
+                        continue;
+
+                    xs.Add(center.X);
+                    ys.Add(center.Y);
+                    zs.Add(center.Z);
+                }
+            }
+            catch (Exception ex) {
+                // never fail an export over the origin heuristic; fall back
+                // to the legacy (non-rebased) output
+                Logger.Log($"x origin: element scan failed ({ex.Message}); exporting without rebase");
+                return;
+            }
+
+            if (xs.Count == 0) {
+                Logger.Log("> origin: no bounded elements in view; exporting without rebase");
+                return;
+            }
+
+            // content center in Revit internal coordinates (feet)
+            double cx = Median(xs), cy = Median(ys), cz = Median(zs);
+            double ft = NumberExtensions.FeetToMeters;
+            double maxAbsMeters =
+                Math.Max(Math.Abs(cx), Math.Max(Math.Abs(cy), Math.Abs(cz))) * ft;
+            bool needsRebase = maxAbsMeters > RebaseThresholdMeters;
+
+            if (needsRebase) {
+                double grid = OriginGridMeters / ft;
+                _originOffset = new XYZ(
+                    Math.Round(cx / grid) * grid,
+                    Math.Round(cy / grid) * grid,
+                    Math.Round(cz / grid) * grid
+                    );
+            }
+
+            Logger.Log(
+                $"> origin: content center ({cx * ft:F1}, {cy * ft:F1}, {cz * ft:F1}) m"
+                + $" from {xs.Count} elements; needsRebase={needsRebase};"
+                + $" originOffset ({_originOffset.X * ft:F1}, {_originOffset.Y * ft:F1}, {_originOffset.Z * ft:F1}) m (Revit X,Y,Z)");
+        }
+
+        static bool IsFinite(double v) => !double.IsNaN(v) && !double.IsInfinity(v);
+
+        static double Median(List<double> values) {
+            var sorted = values.OrderBy(v => v).ToList();
+            int n = sorted.Count;
+            if (n % 2 == 1)
+                return sorted[n / 2];
+            return (sorted[n / 2 - 1] + sorted[n / 2]) / 2.0;
+        }
+
+        #endregion
 
         #region Import linework chunking
 
@@ -398,9 +503,9 @@ namespace GLTFRevitExport.Export {
 
             // localize chunk vertices to their own centroid; the chunk node
             // matrix places them (same convention as LocalizePartStack)
-            float minx, miny, minz, maxx, maxy, maxz;
-            minx = miny = minz = float.MaxValue;
-            maxx = maxy = maxz = float.MinValue;
+            double minx, miny, minz, maxx, maxy, maxz;
+            minx = miny = minz = double.MaxValue;
+            maxx = maxy = maxz = double.MinValue;
             foreach (var part in parts)
                 foreach (var vtx in part.Primitive.Vertices) {
                     minx = vtx.X < minx ? vtx.X : minx;
@@ -412,7 +517,7 @@ namespace GLTFRevitExport.Export {
                 }
 
             var anchor = new VectorData(
-                (minx + maxx) / 2f, (miny + maxy) / 2f, (minz + maxz) / 2f);
+                (minx + maxx) / 2.0, (miny + maxy) / 2.0, (minz + maxz) / 2.0);
 
             foreach (var part in parts)
                 foreach (var vtx in part.Primitive.Vertices) {
@@ -425,9 +530,9 @@ namespace GLTFRevitExport.Export {
                 1f, 0f, 0f, 0f,
                 0f, 1f, 0f, 0f,
                 0f, 0f, 1f, 0f,
-                anchor.X - parentAnchor.X,
-                anchor.Y - parentAnchor.Y,
-                anchor.Z - parentAnchor.Z,
+                (float)(anchor.X - parentAnchor.X),
+                (float)(anchor.Y - parentAnchor.Y),
+                (float)(anchor.Z - parentAnchor.Z),
                 1f
             };
 
